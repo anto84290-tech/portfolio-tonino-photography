@@ -375,6 +375,8 @@ html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
   justify-content: center;
   padding: 64px 88px 72px;
 }
+.visionneuse-scene { touch-action: none; }
+.visionneuse-scene picture { display: contents; }
 .visionneuse-image {
   display: block;
   max-width: 100%;
@@ -389,6 +391,7 @@ html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
   transition: transform .25s ease, opacity .2s ease;
 }
 .visionneuse-image.en-glissement { cursor: grabbing; transition: none; }
+.visionneuse button[hidden] { display: none; }
 .visionneuse button {
   position: absolute;
   z-index: 2;
@@ -516,7 +519,7 @@ html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
   .introuvable { padding: 72px var(--marge) 96px; }
 
   .visionneuse-scene { padding: 64px 0 72px; }
-  .visionneuse-precedent, .visionneuse-suivant { display: none; }
+  .visionneuse .visionneuse-precedent, .visionneuse .visionneuse-suivant { display: none; }
   .visionneuse button { width: 48px; height: 48px; }
   .visionneuse-fermer { top: 8px; right: 8px; }
 }

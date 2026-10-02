@@ -60,8 +60,22 @@ class SiteTestCase(unittest.TestCase):
         contexte.route("**/fonts.googleapis.com/**", lambda route: route.abort())
         contexte.route("**/fonts.gstatic.com/**", lambda route: route.abort())
         page = contexte.new_page()
+        page.set_default_timeout(8000)
         page.goto(self.base + chemin, wait_until="load")
         return page
+
+    def glisser(self, page, dx, dy, duree_ms=150):
+        """Glisse un doigt depuis le centre de l'écran, en huit pas."""
+        cdp = page.context.new_cdp_session(page)
+        taille = page.viewport_size
+        x0, y0 = taille["width"] / 2, taille["height"] / 2
+        cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x0, "y": y0}]})
+        for i in range(1, 9):
+            page.wait_for_timeout(duree_ms / 8)
+            cdp.send("Input.dispatchTouchEvent", {
+                "type": "touchMove", "touchPoints": [{"x": x0 + dx * i / 8, "y": y0 + dy * i / 8}]})
+        cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+        page.wait_for_timeout(50)
 
 
 class TestMiseEnPage(SiteTestCase):
@@ -189,6 +203,179 @@ class TestMenu(SiteTestCase):
         p = self.page("/", 390, javascript=False)
         self.assertEqual(p.locator("#menu a:visible").count(), 3)
         self.assertFalse(p.locator(".menu-bouton").is_visible())
+
+
+class TestVisionneuse(SiteTestCase):
+    def ouvrir(self, chemin="/utopia/", largeur=1440, index=0, **options):
+        p = self.page(chemin, largeur, **options)
+        p.locator(f".colonnes:visible a.photo[data-index='{index}']").click()
+        p.wait_for_selector(".visionneuse[open]")
+        return p
+
+    def compteur(self, p):
+        return p.locator(".visionneuse-compteur").inner_text()
+
+    def attendre_image(self, p):
+        p.wait_for_function("""() => { const i = document.querySelector('.visionneuse-image');
+            return i && i.complete && i.naturalWidth > 0 }""")
+
+    def test_clic_ouvre_la_bonne_photo(self):
+        p = self.ouvrir(index=6)
+        self.assertEqual(self.compteur(p), "07 / 20")
+        self.assertFalse(p.url.endswith(".jpg"))
+        self.attendre_image(p)
+        self.assertIn("utopia-07-", p.evaluate("document.querySelector('.visionneuse-image').currentSrc"))
+
+    def test_entree_ouvre_aussi(self):
+        p = self.page("/utopia/", 1440)
+        p.locator(".colonnes-3 a.photo[data-index='0']").focus()
+        p.keyboard.press("Enter")
+        self.assertEqual(self.compteur(p), "01 / 20")
+
+    def test_fleches_du_clavier(self):
+        p = self.ouvrir(index=0)
+        p.keyboard.press("ArrowRight")
+        self.assertEqual(self.compteur(p), "02 / 20")
+        p.keyboard.press("ArrowLeft")
+        self.assertEqual(self.compteur(p), "01 / 20")
+
+    def test_boucle_aux_extremites(self):
+        p = self.ouvrir(index=0)
+        p.keyboard.press("ArrowLeft")
+        self.assertEqual(self.compteur(p), "20 / 20")
+        p.keyboard.press("ArrowRight")
+        self.assertEqual(self.compteur(p), "01 / 20")
+
+    def test_boutons_precedent_et_suivant(self):
+        p = self.ouvrir(index=3)
+        p.locator(".visionneuse-suivant").click()
+        self.assertEqual(self.compteur(p), "05 / 20")
+        p.locator(".visionneuse-precedent").click()
+        self.assertEqual(self.compteur(p), "04 / 20")
+
+    def test_glisser_au_doigt(self):
+        p = self.ouvrir(largeur=390, hauteur=844, index=4, tactile=True)
+        self.glisser(p, dx=-120, dy=5)   # vers la gauche : photo suivante
+        self.assertEqual(self.compteur(p), "06 / 20")
+        self.glisser(p, dx=120, dy=-5)   # vers la droite : photo précédente
+        self.assertEqual(self.compteur(p), "05 / 20")
+
+    def test_petit_glissement_revient_en_place(self):
+        p = self.ouvrir(largeur=390, hauteur=844, index=4, tactile=True)
+        self.glisser(p, dx=-30, dy=0, duree_ms=600)
+        self.assertEqual(self.compteur(p), "05 / 20")
+        p.wait_for_timeout(350)
+        self.assertIn(p.evaluate("getComputedStyle(document.querySelector('.visionneuse-image')).transform"),
+                      ["none", "matrix(1, 0, 0, 1, 0, 0)"])
+
+    def test_geste_rapide_et_court_change_de_photo(self):
+        # 40 px seulement (moins que le seuil de distance) mais d'un coup sec.
+        p = self.ouvrir(largeur=390, hauteur=844, index=4, tactile=True)
+        p.evaluate("""() => {
+            const scene = document.querySelector('.visionneuse-scene');
+            const ev = (type, x) => scene.dispatchEvent(new PointerEvent(type, {
+                pointerId: 7, pointerType: 'touch', isPrimary: true, bubbles: true, clientX: x, clientY: 400 }));
+            ev('pointerdown', 200); ev('pointermove', 180); ev('pointerup', 160);
+        }""")
+        self.assertEqual(self.compteur(p), "06 / 20")
+
+    def test_geste_vertical_ne_change_pas_de_photo(self):
+        p = self.ouvrir(largeur=390, hauteur=844, index=4, tactile=True)
+        self.glisser(p, dx=-70, dy=200)
+        self.assertEqual(self.compteur(p), "05 / 20")
+        self.assertEqual(p.locator(".visionneuse[open]").count(), 1)
+
+    def test_glisser_a_la_souris(self):
+        p = self.ouvrir(index=4)
+        p.mouse.move(800, 450)
+        p.mouse.down()
+        p.mouse.move(600, 455, steps=8)
+        p.mouse.up()
+        self.assertEqual(self.compteur(p), "06 / 20")
+        self.assertEqual(p.locator(".visionneuse[open]").count(), 1)
+
+    def test_fermetures(self):
+        for action in [lambda p: p.keyboard.press("Escape"),
+                       lambda p: p.locator(".visionneuse-fermer").click(),
+                       lambda p: p.mouse.click(8, 450)]:
+            p = self.ouvrir(index=2)
+            action(p)
+            p.wait_for_selector(".visionneuse", state="hidden")
+
+    def test_photo_entiere_quelle_que_soit_l_orientation(self):
+        for chemin, index, l, h in [("/utopia/", 1, 1440, 900), ("/utopia/", 0, 390, 844),
+                                    ("/utopia/", 1, 390, 844), ("/utopia/", 0, 1440, 900)]:
+            p = self.ouvrir(chemin, l, index, hauteur=h)
+            self.attendre_image(p)
+            b = p.locator(".visionneuse-image").bounding_box()
+            self.assertGreater(b["width"], 200, (index, l))
+            self.assertTrue(b["x"] >= 0 and b["y"] >= 0 and b["x"] + b["width"] <= l
+                            and b["y"] + b["height"] <= h, (index, l, b))
+            proportions = p.evaluate("""() => { const i = document.querySelector('.visionneuse-image');
+                return [i.clientWidth / i.clientHeight, i.naturalWidth / i.naturalHeight] }""")
+            self.assertAlmostEqual(proportions[0], proportions[1], places=1)
+
+    def test_legende(self):
+        p = self.ouvrir(index=19)
+        self.assertEqual(p.locator(".visionneuse-legende").inner_text(), "Colin Benders")
+        p = self.ouvrir(index=0)
+        self.assertFalse(p.locator(".visionneuse-legende").is_visible())
+
+    def test_texte_alternatif_repris_de_la_vignette(self):
+        p = self.ouvrir(index=19)
+        self.assertIn("Colin Benders", p.locator(".visionneuse-image").get_attribute("alt"))
+
+    def test_page_bloquee_puis_focus_rendu(self):
+        p = self.ouvrir(index=10)
+        self.assertTrue(p.evaluate("document.documentElement.classList.contains('visionneuse-ouverte')"))
+        p.keyboard.press("ArrowRight")
+        p.keyboard.press("Escape")
+        # La fermeture est signalée par le navigateur juste après la touche : on l'attend.
+        p.wait_for_function("!document.documentElement.classList.contains('visionneuse-ouverte')")
+        self.assertEqual(p.evaluate("document.activeElement.dataset.index"), "11")
+        self.assertTrue(p.evaluate("""(() => { const r = document.activeElement.getBoundingClientRect();
+            return r.top >= 0 && r.bottom <= innerHeight })()"""))
+
+    def test_tab_reste_dans_la_visionneuse(self):
+        p = self.ouvrir(index=0)
+        for _ in range(6):
+            p.keyboard.press("Tab")
+            self.assertTrue(p.evaluate("!!document.activeElement.closest('.visionneuse')"))
+        for _ in range(4):
+            p.keyboard.press("Shift+Tab")
+            self.assertTrue(p.evaluate("!!document.activeElement.closest('.visionneuse')"))
+
+    def test_voisines_prechargees(self):
+        p = self.ouvrir(index=5)
+        p.wait_for_load_state("networkidle")
+        charges = p.evaluate("""performance.getEntriesByType('resource').map(r => r.name)
+            .filter(n => /utopia-0[57]-(1400|2200)\\.webp/.test(n)).length""")
+        self.assertGreaterEqual(charges, 2)
+
+    def test_galerie_d_une_seule_photo(self):
+        p = self.ouvrir("/tests/une_photo.html", 1440, 0)
+        p.keyboard.press("ArrowRight")
+        self.assertEqual(self.compteur(p), "01 / 01")
+        self.assertFalse(p.locator(".visionneuse-suivant").is_visible())
+        self.assertFalse(p.locator(".visionneuse-precedent").is_visible())
+
+    def test_fleches_masquees_sur_telephone(self):
+        p = self.ouvrir(largeur=390, hauteur=844, index=0)
+        self.assertFalse(p.locator(".visionneuse-suivant").is_visible())
+        self.assertTrue(p.locator(".visionneuse-fermer").is_visible())
+
+    def test_sans_animation_si_demande(self):
+        p = self.ouvrir(index=0, mouvement_reduit=True)
+        self.assertEqual(p.evaluate(
+            "getComputedStyle(document.querySelector('.visionneuse-image')).transitionDuration"), "0s")
+
+    def test_seconde_ouverture_fonctionne(self):
+        p = self.ouvrir(index=1)
+        p.keyboard.press("Escape")
+        p.wait_for_selector(".visionneuse", state="hidden")
+        p.locator(".colonnes:visible a.photo[data-index='8']").click()
+        self.assertEqual(self.compteur(p), "09 / 20")
+        self.assertEqual(p.locator(".visionneuse").count(), 1)
 
 
 if __name__ == "__main__":
