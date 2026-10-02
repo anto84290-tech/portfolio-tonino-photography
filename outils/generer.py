@@ -5,8 +5,13 @@ dans images/ et les pages HTML à la racine du dépôt.
 
 Usage : python3 outils/generer.py --source "/chemin/vers/portfolio photo"
 """
+import argparse
+import html
+import io
 import json
+import sys
 from pathlib import Path
+from string import Template
 
 from PIL import Image, ImageOps
 
@@ -14,8 +19,17 @@ Image.MAX_IMAGE_PIXELS = None
 
 VIGNETTES = (640, 1000)   # largeurs, pour la galerie
 GRANDS = (1400, 2200)     # plus grand côté, pour la visionneuse et les couvertures
-QUALITE_WEBP = 78
-QUALITE_JPEG = 80
+# Qualités essayées dans l'ordre, jusqu'à passer sous le poids visé.
+QUALITES_WEBP = (78, 72, 66, 60)
+QUALITES_JPEG = (80, 74, 68, 62)
+POIDS_MAX_VIGNETTE = 150_000   # octets
+POIDS_MAX_GRAND = 500_000
+
+OUTILS = Path(__file__).resolve().parent
+CONFIG = OUTILS / "festivals.json"
+GABARITS = OUTILS / "gabarits"
+ADRESSE_SITE = "https://portfolio-tonino-photography.vercel.app"
+TAILLES_GALERIE = "(min-width: 1101px) 33vw, 50vw"
 
 
 class ErreurGeneration(Exception):
@@ -64,23 +78,231 @@ def preparer_photo(source: Path, dossier_sortie: Path, slug: str, numero: int) -
     largeur, hauteur = image.size
     vignettes, grands = _tailles(largeur, hauteur)
 
-    def ecrire(taille: tuple[int, int]) -> tuple[int, str]:
+    def ecrire(taille: tuple[int, int], poids_max: int) -> tuple[int, str]:
         nom = nom_image(slug, numero, taille[0], "webp")
         cibles = [
-            (dossier_sortie / nom, {"format": "WEBP", "quality": QUALITE_WEBP, "method": 6}),
-            (dossier_sortie / nom_image(slug, numero, taille[0], "jpg"),
-             {"format": "JPEG", "quality": QUALITE_JPEG, "optimize": True, "progressive": True}),
+            (dossier_sortie / nom, QUALITES_WEBP, {"format": "WEBP", "method": 6}),
+            (dossier_sortie / nom_image(slug, numero, taille[0], "jpg"), QUALITES_JPEG,
+             {"format": "JPEG", "optimize": True, "progressive": True}),
         ]
-        a_faire = [(c, o) for c, o in cibles if not c.exists() or c.stat().st_mtime < date_source]
+        a_faire = [c for c in cibles if not c[0].exists() or c[0].stat().st_mtime < date_source]
         if a_faire:
             reduite = image if taille == image.size else image.resize(taille, Image.LANCZOS)
-            for chemin, options in a_faire:
-                reduite.save(chemin, **options)
+            for chemin, qualites, options in a_faire:
+                for qualite in qualites:
+                    tampon = io.BytesIO()
+                    reduite.save(tampon, quality=qualite, **options)
+                    if tampon.tell() <= poids_max:
+                        break
+                chemin.write_bytes(tampon.getvalue())
         return taille[0], nom
 
     return {
         "largeur": largeur,
         "hauteur": hauteur,
-        "vignettes": [ecrire(t) for t in vignettes],
-        "grands": [ecrire(t) for t in grands],
+        "vignettes": [ecrire(t, POIDS_MAX_VIGNETTE) for t in vignettes],
+        "grands": [ecrire(t, POIDS_MAX_GRAND) for t in grands],
     }
+
+
+def repartir_colonnes(photos: list[dict], n: int) -> list[list[dict]]:
+    """Place chaque photo, dans l'ordre, dans la colonne la moins haute (la plus à gauche si égalité)."""
+    colonnes = [[] for _ in range(n)]
+    hauteurs = [0.0] * n
+    for photo in photos:
+        i = hauteurs.index(min(hauteurs))
+        colonnes[i].append(photo)
+        hauteurs[i] += photo["hauteur"] / photo["largeur"]
+    return colonnes
+
+
+# ---------------------------------------------------------------------------
+# Rendu HTML
+# ---------------------------------------------------------------------------
+
+def _gabarit(nom: str) -> Template:
+    return Template((GABARITS / nom).read_text(encoding="utf-8"))
+
+
+def _e(valeur) -> str:
+    return html.escape(str(valeur), quote=True)
+
+
+def _srcset(slug: str, versions: list, ext: str) -> str:
+    return ", ".join(f"/images/{slug}/{nom.rsplit('.', 1)[0]}.{ext} {largeur}w" for largeur, nom in versions)
+
+
+def _image(slug: str, versions: list, photo: dict, *, classe: str = "", alt: str, tailles: str,
+           differe: bool = True, prioritaire: bool = False) -> str:
+    """Balise <picture> : WebP d'abord, JPEG pour les navigateurs anciens."""
+    largeur_ref = versions[-1][0]
+    hauteur_ref = round(photo["hauteur"] * largeur_ref / photo["largeur"])
+    secours = f"/images/{slug}/{versions[0][1].rsplit('.', 1)[0]}.jpg"
+    attributs = [
+        f'class="{classe}"' if classe else "",
+        f'src="{secours}"',
+        f'srcset="{_srcset(slug, versions, "jpg")}"',
+        f'sizes="{tailles}"',
+        f'width="{largeur_ref}"',
+        f'height="{hauteur_ref}"',
+        f'alt="{_e(alt)}"',
+        'loading="lazy"' if differe else "",
+        'fetchpriority="high"' if prioritaire else "",
+        'decoding="async"',
+    ]
+    return (
+        f'<picture><source type="image/webp" srcset="{_srcset(slug, versions, "webp")}" sizes="{tailles}">'
+        f'<img {" ".join(a for a in attributs if a)}></picture>'
+    )
+
+
+def _bande(festival: dict, etiquette: str) -> str:
+    couverture = festival["photos"][festival["couverture"] - 1]
+    return _gabarit("_bande.html").substitute(
+        slug=festival["slug"],
+        image=_image(festival["slug"], couverture["grands"], couverture, classe="bande-photo", alt="", tailles="100vw"),
+        etiquette=_e(etiquette),
+        nom=_e(festival["nom"]),
+        nombre=len(festival["photos"]),
+    )
+
+
+def _colonnes(festival: dict, n: int) -> str:
+    morceau = _gabarit("_photo.html")
+    blocs = []
+    for colonne in repartir_colonnes(festival["photos"], n):
+        liens = "".join(
+            morceau.substitute(
+                grand=f"/images/{festival['slug']}/{p['grands'][-1][1].rsplit('.', 1)[0]}.jpg",
+                index=p["index"],
+                legende=_e(p["legende"]),
+                grand_srcset=_srcset(festival["slug"], p["grands"], "webp"),
+                image=_image(festival["slug"], p["vignettes"], p, alt=p["alt"], tailles=TAILLES_GALERIE),
+            )
+            for p in colonne
+        )
+        blocs.append(f'<div class="colonne">\n{liens}</div>')
+    return "\n".join(blocs)
+
+
+def _page(corps: str, *, titre: str, description: str, chemin: str, apercu: str, classe: str,
+          scripts: str = "", festivals_actif: bool = False) -> str:
+    entete = _gabarit("_entete.html").substitute(
+        titre=_e(titre),
+        description=_e(description),
+        url=ADRESSE_SITE + chemin,
+        apercu=ADRESSE_SITE + apercu,
+        classe_page=classe,
+        scripts=scripts,
+        festivals_actif=' aria-current="true"' if festivals_actif else "",
+    )
+    return entete + corps + _gabarit("_pied.html").substitute()
+
+
+def _apercu(festival: dict, numero: int) -> str:
+    photo = festival["photos"][numero - 1]
+    return f"/images/{festival['slug']}/{photo['grands'][0][1].rsplit('.', 1)[0]}.jpg"
+
+
+def rendre_accueil(cfg: dict) -> str:
+    festivals = cfg["festivals"]
+    par_slug = {f["slug"]: f for f in festivals}
+    bandeau = cfg["accueil"]["bandeau"]
+    festival_bandeau = par_slug[bandeau["festival"]]
+    photo = festival_bandeau["photos"][bandeau["photo"] - 1]
+    corps = _gabarit("accueil.html").substitute(
+        bandeau_image=_image(festival_bandeau["slug"], photo["grands"], photo, classe="bandeau-photo",
+                             alt=photo["alt"], tailles="100vw", differe=False, prioritaire=True),
+        nombre_festivals=len(festivals),
+        bandes="".join(_bande(f, f"{i:02d}") for i, f in enumerate(festivals, 1)),
+    )
+    return _page(
+        corps,
+        titre="Tonino Photography — Photographe de concerts et de festivals à Marseille",
+        description="Photographe de concerts et de festivals, tous styles de musique confondus — de la fosse aux backstages. Basé à Marseille.",
+        chemin="/",
+        apercu=_apercu(festival_bandeau, bandeau["photo"]),
+        classe="page-accueil",
+    )
+
+
+def rendre_festival(festival: dict, suivant: dict) -> str:
+    nombre = len(festival["photos"])
+    corps = _gabarit("festival.html").substitute(
+        nom=_e(festival["nom"]),
+        nom_complet=_e(festival["nom_complet"]),
+        lieu=_e(festival["lieu"]),
+        dates=_e(festival["dates"]),
+        nombre=nombre,
+        colonnes_3=_colonnes(festival, 3),
+        colonnes_2=_colonnes(festival, 2),
+        bande_suivante=_bande(suivant, "Festival suivant"),
+    )
+    return _page(
+        corps,
+        titre=f"{festival['nom_complet']} {festival['annee']}, {festival['lieu']} — Tonino Photography",
+        description=f"{festival['nom_complet']}, {festival['lieu']}, {festival['dates']} : {nombre} photos de concert par Tonino Photography.",
+        chemin=f"/{festival['slug']}/",
+        apercu=_apercu(festival, festival["couverture"]),
+        classe="page-festival",
+        scripts='<script src="/js/visionneuse.js" defer></script>',
+        festivals_actif=True,
+    )
+
+
+def rendre_introuvable(cfg: dict) -> str:
+    bandeau = cfg["accueil"]["bandeau"]
+    festival = {f["slug"]: f for f in cfg["festivals"]}[bandeau["festival"]]
+    return _page(
+        _gabarit("404.html").substitute(),
+        titre="Page introuvable — Tonino Photography",
+        description="Cette page n'existe pas ou a été déplacée.",
+        chemin="/404.html",
+        apercu=_apercu(festival, bandeau["photo"]),
+        classe="page-introuvable",
+    )
+
+
+def generer_site(source: Path, racine: Path) -> None:
+    """Prépare toutes les images puis écrit toutes les pages dans `racine`."""
+    source, racine = Path(source), Path(racine)
+    cfg = charger_config(CONFIG)
+    festivals = cfg["festivals"]
+
+    # 1. Images. Une photo manquante arrête tout avant l'écriture de la moindre page.
+    for festival in festivals:
+        sortie = racine / "images" / festival["slug"]
+        for index, photo in enumerate(festival["photos"]):
+            photo.update(preparer_photo(source / festival["dossier"] / photo["fichier"],
+                                        sortie, festival["slug"], index + 1))
+            photo["index"] = index
+
+    # 2. Pages.
+    pages = {"index.html": rendre_accueil(cfg), "404.html": rendre_introuvable(cfg)}
+    for i, festival in enumerate(festivals):
+        suivant = festivals[(i + 1) % len(festivals)]
+        pages[f"{festival['slug']}/index.html"] = rendre_festival(festival, suivant)
+    for chemin, contenu in pages.items():
+        fichier = racine / chemin
+        fichier.parent.mkdir(parents=True, exist_ok=True)
+        fichier.write_text(contenu, encoding="utf-8")
+
+
+def main() -> int:
+    analyse = argparse.ArgumentParser(description="Génère le site Tonino Photography.")
+    analyse.add_argument("--source", required=True, type=Path,
+                         help="dossier « portfolio photo » contenant un sous-dossier par festival")
+    analyse.add_argument("--racine", type=Path, default=OUTILS.parent,
+                         help="dossier où écrire le site (par défaut : le dépôt)")
+    options = analyse.parse_args()
+    try:
+        generer_site(options.source, options.racine)
+    except ErreurGeneration as erreur:
+        print(f"Erreur : {erreur}", file=sys.stderr)
+        return 1
+    print(f"Site généré dans {options.racine}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
