@@ -21,17 +21,22 @@ Image.MAX_IMAGE_PIXELS = None
 
 VIGNETTES = (640, 1000)   # largeurs, pour la galerie
 GRANDS = (1400, 2200)     # plus grand côté, pour la visionneuse et les couvertures
-# Qualités essayées dans l'ordre, jusqu'à passer sous le poids visé.
-QUALITES_WEBP = (78, 72, 66, 60)
-QUALITES_JPEG = (80, 74, 68, 62)
-POIDS_MAX_VIGNETTE = 150_000   # octets
-POIDS_MAX_GRAND = 500_000
+# Des photos de concert sont sombres et pleines de grain : trop compressé, ce grain
+# se transforme en pâtés bien visibles en grand. La compression reste donc légère.
+# Qualités (WebP, JPEG) essayées dans l'ordre, jusqu'à passer sous le poids visé.
+QUALITES_VIGNETTE = ((84, 80, 76), (86, 82, 78))
+QUALITES_GRAND = ((90, 86, 82), (90, 86, 82))
+POIDS_MAX_VIGNETTE = 300_000   # octets
+POIDS_MAX_GRAND = 1_200_000
 
 OUTILS = Path(__file__).resolve().parent
 CONFIG = OUTILS / "festivals.json"
 GABARITS = OUTILS / "gabarits"
 ADRESSE_SITE = "https://portfolio-tonino-photography.vercel.app"
 TAILLES_GALERIE = "(min-width: 1101px) 33vw, 50vw"
+# Les bandes des festivals sont basses et assombries par un voile : on annonce au
+# navigateur une largeur plus petite que l'écran, pour qu'il prenne une version plus légère.
+TAILLES_BANDE = "70vw"
 
 
 class ErreurGeneration(Exception):
@@ -129,7 +134,7 @@ REGISTRE = "empreintes.json"
 
 def _empreinte(source: Path) -> str:
     """Identifie le contenu d'une photo d'origine et les réglages utilisés pour la préparer."""
-    reglages = repr((VIGNETTES, GRANDS, QUALITES_WEBP, QUALITES_JPEG, POIDS_MAX_VIGNETTE, POIDS_MAX_GRAND, "sRGB"))
+    reglages = repr((VIGNETTES, GRANDS, QUALITES_VIGNETTE, QUALITES_GRAND, POIDS_MAX_VIGNETTE, POIDS_MAX_GRAND, "sRGB"))
     condense = hashlib.sha256(reglages.encode())
     condense.update(source.read_bytes())
     return condense.hexdigest()
@@ -191,16 +196,16 @@ def preparer_photo(source: Path, dossier_sortie: Path, slug: str, numero: int) -
     largeur, hauteur = image.size
     vignettes, grands = _tailles(largeur, hauteur)
 
-    def ecrire(taille: tuple[int, int], poids_max: int) -> list:
+    def ecrire(taille: tuple[int, int], qualites: tuple, poids_max: int) -> list:
         nom = nom_image(slug, numero, taille[0], "webp")
         cibles = [
-            (dossier_sortie / nom, QUALITES_WEBP, {"format": "WEBP", "method": 6}),
-            (dossier_sortie / nom_image(slug, numero, taille[0], "jpg"), QUALITES_JPEG,
+            (dossier_sortie / nom, qualites[0], {"format": "WEBP", "method": 6}),
+            (dossier_sortie / nom_image(slug, numero, taille[0], "jpg"), qualites[1],
              {"format": "JPEG", "optimize": True, "progressive": True}),
         ]
         reduite = image if taille == image.size else image.resize(taille, Image.LANCZOS)
-        for chemin, qualites, options in cibles:
-            for qualite in qualites:
+        for chemin, essais, options in cibles:
+            for qualite in essais:
                 tampon = io.BytesIO()
                 reduite.save(tampon, quality=qualite, **options)
                 if tampon.tell() <= poids_max:
@@ -213,8 +218,8 @@ def preparer_photo(source: Path, dossier_sortie: Path, slug: str, numero: int) -
         "empreinte": empreinte,
         "largeur": largeur,
         "hauteur": hauteur,
-        "vignettes": [ecrire(t, POIDS_MAX_VIGNETTE) for t in vignettes],
-        "grands": [ecrire(t, POIDS_MAX_GRAND) for t in grands],
+        "vignettes": [ecrire(t, QUALITES_VIGNETTE, POIDS_MAX_VIGNETTE) for t in vignettes],
+        "grands": [ecrire(t, QUALITES_GRAND, POIDS_MAX_GRAND) for t in grands],
     }
     registre = _lire_registre(dossier_sortie)
     registre[cle] = entree
@@ -298,7 +303,7 @@ def _bande(festival: dict, etiquette: str) -> str:
     couverture = festival["photos"][festival["couverture"] - 1]
     return _gabarit("_bande.html").substitute(
         slug=festival["slug"],
-        image=_image(festival["slug"], couverture["grands"], couverture, classe="bande-photo", alt="", tailles="100vw"),
+        image=_image(festival["slug"], couverture["grands"], couverture, classe="bande-photo", alt="", tailles=TAILLES_BANDE),
         etiquette=_e(etiquette),
         nom=_e(festival["nom"]),
         nombre=len(festival["photos"]),

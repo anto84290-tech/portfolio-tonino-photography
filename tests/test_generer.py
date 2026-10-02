@@ -6,7 +6,7 @@ import unittest.mock
 from html.parser import HTMLParser
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops, ImageFilter, ImageStat
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "outils"))
@@ -107,6 +107,51 @@ class TestImages(unittest.TestCase):
         for _, nom in r["vignettes"] + r["grands"]:
             for fichier in (nom, nom.replace(".webp", ".jpg")):
                 self.assertLess((serre / fichier).stat().st_size, (normal / fichier).stat().st_size, fichier)
+
+
+def _scene_sombre(grain: int) -> Image.Image:
+    """Photo de concert simulée : fond sombre en dégradé, couvert du grain du capteur."""
+    taille = (2600, 1733)
+    fond = Image.linear_gradient("L").resize(taille).point(lambda v: 12 + v // 6)
+    clair = ImageChops.add(fond, Image.effect_noise(taille, grain), 1, -128)
+    return Image.merge("RGB", (clair, clair.point(lambda v: int(v * .8)), clair.point(lambda v: min(255, int(v * 1.3)))))
+
+
+def _grain(image: Image.Image) -> float:
+    """Force du grain : ce qui reste de l'image une fois ses grandes formes retirées."""
+    gris = image.convert("L")
+    return ImageStat.Stat(ImageChops.subtract(gris, gris.filter(ImageFilter.GaussianBlur(2)), 1, 128)).stddev[0]
+
+
+class TestFidelite(unittest.TestCase):
+    """Une photo sombre et granuleuse ne doit pas ressortir en pâtés (« pixelisation »)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _grain_conserve(self, grain: int, sorte: str) -> dict:
+        """Part du grain d'origine encore présente dans la plus grande version, par format."""
+        origine = _scene_sombre(grain)
+        origine.save(self.base / "sombre.png")
+        largeur, nom = preparer_photo(self.base / "sombre.png", self.base / "sortie", "test", 1)[sorte][-1]
+        reference = _grain(origine.resize((largeur, round(origine.height * largeur / origine.width)), Image.LANCZOS))
+        conserve = {}
+        for fichier in (nom, nom.replace(".webp", ".jpg")):
+            with Image.open(self.base / "sortie" / fichier) as image:
+                conserve[fichier.rsplit(".", 1)[1]] = _grain(image) / reference
+        return conserve
+
+    def test_grand_format_garde_le_grain(self):
+        for ext, part in self._grain_conserve(6, "grands").items():
+            self.assertGreater(part, .9, ext)
+
+    def test_vignette_garde_le_grain(self):
+        for ext, part in self._grain_conserve(14, "vignettes").items():
+            self.assertGreater(part, .8, ext)
 
 
 class _SiteMiniature(unittest.TestCase):

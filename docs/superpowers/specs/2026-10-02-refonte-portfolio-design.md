@@ -295,7 +295,7 @@ Pour chaque photo, `generer.py` produit :
 | Vignette | 640 px et 1000 px | Galerie (le navigateur choisit selon l'écran) |
 | Grand format | 1400 px et 2200 px (plus grand côté) | Visionneuse, bandeau, bandes |
 
-Chaque version existe en WebP, avec une copie JPEG pour les navigateurs anciens. Poids visé : moins de 150 Ko par vignette, moins de 500 Ko par grand format. Les fichiers portent des noms simples (`utopia-01-1000.webp`). Les dimensions sont inscrites dans le HTML pour que la page ne saute pas pendant le chargement.
+Chaque version existe en WebP, avec une copie JPEG pour les navigateurs anciens. La compression reste légère (qualité 84 pour les vignettes, 90 pour les grands formats) : sur des photos de concert sombres et granuleuses, une compression plus forte transforme le grain en pâtés visibles en plein écran. Plafonds de poids : 300 Ko par vignette, 1,2 Mo par grand format ; au-delà, la qualité baisse d'un cran. Sur l'accueil, les bandes des festivals, basses et assombries, chargent une version plus légère que la largeur de l'écran. Les fichiers portent des noms simples (`utopia-01-1000.webp`). Les dimensions sont inscrites dans le HTML pour que la page ne saute pas pendant le chargement.
 
 ### 8.4 Référencement et partage
 
