@@ -1,0 +1,115 @@
+{
+  "accueil": {
+    "bandeau": {"festival": "utopia", "photo": 1}
+  },
+  "festivals": [
+    {
+      "slug": "utopia",
+      "nom": "Utopia",
+      "nom_complet": "Utopia Festival",
+      "lieu": "Marseille",
+      "dates": "26 et 27 septembre 2026",
+      "annee": 2026,
+      "dossier": "Utopia 2026",
+      "couverture": 3,
+      "photos": [
+        {"fichier": "Anthony_Valldercabres_40.jpg", "legende": "", "alt": "DJ de dos, bras grands ouverts face à la foule, sous des faisceaux bleus croisés"},
+        {"fichier": "Anthony_Valldercabres_10.jpg", "legende": "", "alt": "Festivalier au masque de super-héros baigné de lumière rouge, faisant un signe de la main"},
+        {"fichier": "Anthony_Valldercabres_12.jpg", "legende": "", "alt": "DJ casque sur les oreilles sous des lasers bleus, la main levée"},
+        {"fichier": "Anthony_Valldercabres_17.jpg", "legende": "", "alt": "DJ aux longues tresses qui crie de joie derrière ses platines"},
+        {"fichier": "Anthony_Valldercabres_4.jpg", "legende": "", "alt": "Mains levées en ombre chinoise devant un mur éclairé"},
+        {"fichier": "Anthony_Valldercabres_47.jpg", "legende": "", "alt": "DJ au chapeau de cow-boy traversé par des rais de lumière bleue"},
+        {"fichier": "Anthony_Valldercabres_14.jpg", "legende": "", "alt": "Festivalière en maillot léopard qui danse au premier rang, verre à la main"},
+        {"fichier": "Anthony_Valldercabres_1.jpg", "legende": "", "alt": "DJ concentrée sur sa table de mixage dans une lumière orange"},
+        {"fichier": "Anthony_Valldercabres_18.jpg", "legende": "", "alt": "Éventail de faisceaux bleus au-dessus des silhouettes du public"},
+        {"fichier": "Anthony_Valldercabres_35.jpg", "legende": "", "alt": "DJ aux cheveux roses, bras ouverts, devant une salle comble"},
+        {"fichier": "Anthony_Valldercabres_24.jpg", "legende": "", "alt": "Artiste torse nu qui pointe l'objectif du doigt, micro à la bouche"},
+        {"fichier": "Anthony_Valldercabres_7.jpg", "legende": "", "alt": "Deux DJ devant un mur de LED rouges, l'une agite un éventail"},
+        {"fichier": "Anthony_Valldercabres_29.jpg", "legende": "", "alt": "DJ de dos, bras levé vers la foule, vu depuis la scène"},
+        {"fichier": "Anthony_Valldercabres_9.jpg", "legende": "", "alt": "Deux festivalières à lunettes blanches, bras en l'air contre la barrière"},
+        {"fichier": "Anthony_Valldercabres_11.jpg", "legende": "", "alt": "DJ torse nu, casquette et grand sourire dans une lumière rouge"},
+        {"fichier": "Anthony_Valldercabres_32.jpg", "legende": "", "alt": "DJ aux cheveux roses de profil, traversée par un rayon de lumière blanche"},
+        {"fichier": "Anthony_Valldercabres_44.jpg", "legende": "", "alt": "Silhouettes du public dans une brume bleue, un doigt levé"},
+        {"fichier": "Anthony_Valldercabres_51.jpg", "legende": "", "alt": "DJ en foulard, tête levée, dans un faisceau de lumière blanche"},
+        {"fichier": "Anthony_Valldercabres_31.jpg", "legende": "", "alt": "Éclat de lumière bleue au-dessus de la foule, vu de derrière le DJ"},
+        {"fichier": "Anthony_Valldercabres_ColinBenders.jpg", "legende": "Colin Benders", "alt": "Colin Benders aux machines devant un écran aux motifs rouges et violets"}
+      ]
+    },
+    {
+      "slug": "raggamuffin",
+      "nom": "Raggamuffin",
+      "nom_complet": "Raggamuffin Festival",
+      "lieu": "Nice",
+      "dates": "4 août 2026",
+      "annee": 2026,
+      "dossier": "raggamuffin 2026",
+      "couverture": 8,
+      "photos": [
+        {"fichier": "Tonino_photography_raggamuffin_Cozik.jpg", "legende": "Cozik", "alt": "Cozik chante, genou levé, dreadlocks en mouvement et chemise au crochet jaune"},
+        {"fichier": "Tonino_photography_raggamuffin_Marcusgad.jpg", "legende": "Marcus Gad", "alt": "Marcus Gad, bras en croix au micro, devant ses musiciens"},
+        {"fichier": "Tonino_photography_raggamuffin_Vanupié2.jpg", "legende": "Vanupié", "alt": "Vanupié à la guitare acoustique, yeux fermés, dreadlocks sur les épaules"},
+        {"fichier": "Tonino_photography_raggamuffin_fayapid.jpg", "legende": "Fayapid", "alt": "Fayapid chante vers l'objectif, poing levé, en chemise au crochet verte"},
+        {"fichier": "Tonino_photography_raggamuffin_fayapidcozik.jpg", "legende": "Fayapid & Cozik", "alt": "Fayapid saute sur scène, micro en main, Cozik de dos à ses côtés"},
+        {"fichier": "Tonino_photography_raggamuffin_l'entourloop.jpg", "legende": "L'Entourloop", "alt": "Silhouette d'un homme voûté avec une canne devant un écran vert, un DJ au premier plan"},
+        {"fichier": "Tonino_photography_raggamuffin_l'entourloop2.jpg", "legende": "L'Entourloop", "alt": "Scène vue de loin : une chanteuse sous cinq projecteurs blancs, entourée de deux DJ"},
+        {"fichier": "Tonino_photography_raggamuffin_l'entourloop3.jpg", "legende": "L'Entourloop", "alt": "Un MC saute devant un écran jaune à motifs, la foule bras levés au premier plan"},
+        {"fichier": "Tonino_photography_raggamuffin_public1.jpg", "legende": "", "alt": "Deux festivaliers souriants, l'un drapé dans un drapeau vert, jaune et noir"},
+        {"fichier": "Tonino_photography_raggamuffin_public2.jpg", "legende": "", "alt": "Dans la foule, un festivalier aux dreadlocks lève le doigt vers la scène"},
+        {"fichier": "Tonino_photography_raggamuffin_public7.jpg", "legende": "", "alt": "Public serré contre la barrière sous une lumière rose, chapeaux et bras levés"}
+      ]
+    },
+    {
+      "slug": "zikzac",
+      "nom": "ZikZac",
+      "nom_complet": "ZikZac",
+      "lieu": "Aix-en-Provence",
+      "dates": "9 au 11 juillet 2026",
+      "annee": 2026,
+      "dossier": "zikzac 2026",
+      "couverture": 12,
+      "photos": [
+        {"fichier": "Tonino_photography_DaCruz2.jpg", "legende": "Da Cruz", "alt": "Chanteuse en robe rose vif, bras grands ouverts devant la batterie"},
+        {"fichier": "Tonino_photography_Dance.jpg", "legende": "", "alt": "Danseuse en robe rouge à motifs, bras levés, sous des lumières rouges et violettes"},
+        {"fichier": "Tonino_photography_DjZakir.jpg", "legende": "DJ Zakir", "alt": "DJ penché sur ses platines, éclairé en violet, la foule en vert derrière lui"},
+        {"fichier": "Tonino_photography_Graph.jpg", "legende": "", "alt": "Graffeur de dos peignant un grand visage jaune et bleu sur un mur"},
+        {"fichier": "Tonino_photography_KinGongoloKiniata.jpg.jpg", "legende": "Kin'Gongolo Kiniata", "alt": "Musiciens en gilets argentés sous une lumière bleue, saxophone et percussions"},
+        {"fichier": "Tonino_photography_La CafeteriaRoja.jpg", "legende": "La Cafetera Roja", "alt": "Groupe sur scène baigné de rouge, derrière les silhouettes du public"},
+        {"fichier": "Tonino_photography_MrBu.jpg", "legende": "Mr Bu", "alt": "Homme élégant en costume rose à fleurs, nœud papillon rouge et canne, dans le parc"},
+        {"fichier": "Tonino_photography_Sidiaz2.jpg", "legende": "Sidiaz", "alt": "Guitariste qui rit, guitare vert pâle brandie vers le ciel"},
+        {"fichier": "Tonino_photography_TOPmouvementee.jpg", "legende": "", "alt": "Deux acrobates en plein porté sous les arbres du parc"},
+        {"fichier": "Tonino_photography_Valpiniste.jpg", "legende": "Le Valpiniste", "alt": "Équilibriste debout sur une tour de valises, devant un rideau rouge"},
+        {"fichier": "Tonino_photography_Vanupié2.jpg.jpg", "legende": "Vanupié", "alt": "Vanupié au micro, guitare en bandoulière, dans une lumière rouge"},
+        {"fichier": "Tonino_photography_Vaudoogame2.jpg", "legende": "Vaudou Game", "alt": "Chanteur en costume blanc, guitare en main, dans une fumée jaune"},
+        {"fichier": "Tonino_photography_amphiplein.jpg", "legende": "", "alt": "Amphithéâtre de verdure plein à craquer à la tombée de la nuit, éclairé en violet"},
+        {"fichier": "Tonino_photography_dancepublique.jpg", "legende": "", "alt": "Danseuse bras levés au milieu des gradins remplis de spectateurs"},
+        {"fichier": "Tonino_photography_publiqueportrait.jpg", "legende": "", "alt": "Deux spectateurs en gros plan : lunettes rouges, éventail bleu et cheveux argentés"}
+      ]
+    },
+    {
+      "slug": "astroluna",
+      "nom": "Astroluna",
+      "nom_complet": "Astroluna",
+      "lieu": "Marignane",
+      "dates": "4 juillet 2026",
+      "annee": 2026,
+      "dossier": "Astroluna 2026",
+      "couverture": 13,
+      "photos": [
+        {"fichier": "Tonino_photographie_Gambino.jpg", "legende": "Gambino", "alt": "Artiste torse nu, visage masqué par un foulard, qui chante accroupi au micro"},
+        {"fichier": "Tonino_photographie_Gradur2.jpg", "legende": "Gradur", "alt": "Gradur chante en se filmant, bras tendu, téléphone à la main"},
+        {"fichier": "Tonino_photography_Andyman2.jpg.jpg", "legende": "Andyman", "alt": "DJ de dos aux platines, bras ouverts face à la foule et à la mer"},
+        {"fichier": "Tonino_photography_BLV.jpg.jpg", "legende": "BLV", "alt": "Rappeur en débardeur blanc et lunettes noires, micro en main sous un ciel bleu"},
+        {"fichier": "Tonino_photography_Carla.jpg.jpg", "legende": "Carla", "alt": "Chanteuse les yeux fermés, bras relevé, en haut à sequins"},
+        {"fichier": "Tonino_photography_Dr.Bisous.jpg.jpg", "legende": "Docteur Bisous", "alt": "DJ souriant derrière ses platines, casque autour du cou"},
+        {"fichier": "Tonino_photography_Eniah.jpg.jpg", "legende": "Eniah", "alt": "Chanteur aux boucles blondes, yeux fermés au micro, en maillot vert"},
+        {"fichier": "Tonino_photography_Lesram.jpg.jpg", "legende": "Lesram", "alt": "Rappeur de profil, bob sur la tête, micro contre la bouche sous un ciel bleu"},
+        {"fichier": "Tonino_photography_Leto.jpg.jpg", "legende": "Leto", "alt": "Rappeur en contre-plongée, micro levé vers le ciel sur fond noir"},
+        {"fichier": "Tonino_photography_Vin-G.jpg.jpg", "legende": "Vin-G", "alt": "Chanteur de profil, micro tenu à deux mains, devant un palmier"},
+        {"fichier": "Tonino_photography_publique2.jpg.jpg", "legende": "", "alt": "Foule au coucher du soleil devant des palmiers et la mer"},
+        {"fichier": "Tonino_photography_publique5.jpg.jpg", "legende": "", "alt": "Festivalière souriante au premier rang, doigt levé, dans la foule"},
+        {"fichier": "Tonino_photography_publique7.jpg.jpg", "legende": "", "alt": "Premier rang en liesse à la tombée du jour, téléphones allumés et bras levés"},
+        {"fichier": "Tonino_photography_weshenfoiré.jpg.jpg", "legende": "", "alt": "Festivalier aux cheveux longs tenant une pancarte manuscrite à la barrière"}
+      ]
+    }
+  ]
+}
