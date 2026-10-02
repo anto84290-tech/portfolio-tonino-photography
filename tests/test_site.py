@@ -14,7 +14,17 @@ from playwright.sync_api import sync_playwright
 RACINE = Path(__file__).resolve().parent.parent
 CHROMIUM = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 
-LARGEURS = [390, 820, 1440]
+LARGEURS = [320, 360, 375, 390, 700, 768, 820, 1100, 1101, 1440]
+
+# La vraie police des titres (Big Shoulders Display 900, servie par Google Fonts) est
+# remplacée dans les tests par Big Shoulders Bold, agrandie de 14 % : les lettres de la
+# graisse 900 sont environ 10 % plus larges que celles du Bold, plus une marge de sécurité.
+POLICE_DE_TEST = """@font-face {
+  font-family: "Big Shoulders Display";
+  font-weight: 900;
+  src: url("%s/tests/polices/BigShoulders-Bold.ttf") format("truetype");
+  size-adjust: 114%%;
+}"""
 PAGES = ["/", "/utopia/", "/raggamuffin/", "/zikzac/", "/astroluna/", "/404.html"]
 
 
@@ -57,12 +67,18 @@ class SiteTestCase(unittest.TestCase):
             reduced_motion="reduce" if mouvement_reduit else "no-preference",
         )
         self._contextes.append(contexte)
-        contexte.route("**/fonts.googleapis.com/**", lambda route: route.abort())
-        contexte.route("**/fonts.gstatic.com/**", lambda route: route.abort())
+        self.polices(contexte)
         page = contexte.new_page()
         page.set_default_timeout(8000)
         page.goto(self.base + chemin, wait_until="load")
+        page.evaluate("document.fonts.ready")
         return page
+
+    def polices(self, contexte):
+        """Sert la police de test à la place de Google Fonts (pas de réseau pendant les tests)."""
+        contexte.route("**/fonts.googleapis.com/**", lambda route: route.fulfill(
+            status=200, content_type="text/css", body=POLICE_DE_TEST % self.base))
+        contexte.route("**/fonts.gstatic.com/**", lambda route: route.abort())
 
     def glisser(self, page, dx, dy, duree_ms=150):
         """Glisse un doigt depuis le centre de l'écran, en huit pas."""
@@ -94,6 +110,33 @@ class TestMiseEnPage(SiteTestCase):
                     .map(e => e.textContent.trim())""")
                 self.assertEqual(trop, [], (chemin, l))
 
+    def test_aucun_mot_coupe_en_deux(self):
+        # Sans la coupure de secours (overflow-wrap), aucun mot ne doit dépasser de sa boîte.
+        for chemin in PAGES:
+            for l in LARGEURS:
+                p = self.page(chemin, l)
+                coupes = p.evaluate("""() => [...document.querySelectorAll('h1,h2,.bande-nom,.contact-mail,.menu a,.marque')]
+                    .filter(e => e.offsetParent)
+                    .filter(e => { e.style.overflowWrap = 'normal'; return e.scrollWidth > e.clientWidth + 1 })
+                    .map(e => e.textContent.trim())""")
+                self.assertEqual(coupes, [], (chemin, l))
+
+    def test_la_police_des_titres_est_chargee_pendant_les_tests(self):
+        p = self.page("/", 1440)
+        self.assertTrue(p.evaluate("document.fonts.check('900 40px \\'Big Shoulders Display\\'')"))
+
+    def test_bandeau_entier_sur_un_petit_ecran_d_ordinateur(self):
+        p = self.page("/", 1366, hauteur=650)
+        bas = p.evaluate("document.querySelector('.bandeau-bas').getBoundingClientRect().bottom")
+        haut = p.evaluate("document.querySelector('.bandeau-titre').getBoundingClientRect().top")
+        self.assertLessEqual(bas, 650)
+        self.assertGreaterEqual(haut, 70)   # le titre ne passe pas sous le menu
+
+    def test_bandeau_sur_telephone_couche(self):
+        p = self.page("/", 844, hauteur=390)
+        haut = p.evaluate("document.querySelector('.bandeau-titre').getBoundingClientRect().top")
+        self.assertTrue(60 <= haut < 300, haut)
+
     def test_noms_de_festival_sur_une_seule_ligne(self):
         # Avec la police de secours calibrée, aucun nom n'est coupé au milieu d'un mot.
         for l in LARGEURS:
@@ -103,7 +146,7 @@ class TestMiseEnPage(SiteTestCase):
             self.assertEqual(lignes, [1, 1, 1, 1], l)
 
     def test_nombre_de_colonnes(self):
-        for l, n in [(390, 2), (820, 2), (1440, 3)]:
+        for l, n in [(390, 2), (820, 2), (1100, 2), (1101, 3), (1440, 3)]:
             p = self.page("/utopia/", l)
             self.assertEqual(p.locator(".colonnes:visible .colonne").count(), n, l)
 
@@ -199,6 +242,25 @@ class TestMenu(SiteTestCase):
         p.wait_for_url("**/#a-propos")
         self.assertTrue(p.url.endswith("/#a-propos"))
 
+    def test_menu_utilisable_si_le_script_du_menu_ne_charge_pas(self):
+        contexte = self.navigateur.new_context(viewport={"width": 390, "height": 844})
+        self._contextes.append(contexte)
+        self.polices(contexte)
+        contexte.route("**/js/menu.js", lambda route: route.abort())
+        p = contexte.new_page()
+        p.goto(self.base + "/", wait_until="load")
+        self.assertEqual(p.locator("#menu a:visible").count(), 3)
+        self.assertFalse(p.locator(".menu-bouton").is_visible())
+
+    def test_tourner_le_telephone_menu_ouvert_ne_bloque_pas_la_page(self):
+        p = self.page("/", 390, hauteur=844)
+        p.locator(".menu-bouton").click()
+        p.set_viewport_size({"width": 844, "height": 390})
+        p.wait_for_function("!document.documentElement.classList.contains('menu-ouvert')")
+        self.assertEqual(p.locator(".menu-bouton").get_attribute("aria-expanded"), "false")
+        self.assertNotEqual(p.evaluate("getComputedStyle(document.documentElement).overflowY"), "hidden")
+        self.assertEqual(p.evaluate("getComputedStyle(document.querySelector('#menu')).position"), "static")
+
     def test_menu_utilisable_sans_javascript(self):
         p = self.page("/", 390, javascript=False)
         self.assertEqual(p.locator("#menu a:visible").count(), 3)
@@ -293,6 +355,23 @@ class TestVisionneuse(SiteTestCase):
         p.mouse.up()
         self.assertEqual(self.compteur(p), "06 / 20")
         self.assertEqual(p.locator(".visionneuse[open]").count(), 1)
+
+    def test_clic_souris_sur_la_photo_ne_ferme_pas(self):
+        p = self.ouvrir(index=0)
+        self.attendre_image(p)
+        b = p.locator(".visionneuse-image").bounding_box()
+        p.mouse.click(b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+        p.wait_for_timeout(150)
+        self.assertEqual(p.locator(".visionneuse[open]").count(), 1)
+        self.assertEqual(self.compteur(p), "01 / 20")
+
+    def test_la_nouvelle_photo_arrive_au_centre(self):
+        # Après un glissement, la photo suivante ne doit pas hériter du décalage du doigt.
+        p = self.ouvrir(largeur=390, hauteur=844, index=4, tactile=True)
+        self.glisser(p, dx=-160, dy=0)
+        self.assertEqual(self.compteur(p), "06 / 20")
+        decalage = p.evaluate("new DOMMatrix(getComputedStyle(document.querySelector('.visionneuse-image')).transform).m41")
+        self.assertLess(abs(decalage), 2, decalage)
 
     def test_fermetures(self):
         for action in [lambda p: p.keyboard.press("Escape"),
@@ -409,16 +488,14 @@ class TestEnsemble(SiteTestCase):
     def erreurs_console(self, chemin, largeur):
         contexte = self.navigateur.new_context(viewport={"width": largeur, "height": 900})
         self._contextes.append(contexte)
-        contexte.route("**/fonts.googleapis.com/**", lambda route: route.abort())
-        contexte.route("**/fonts.gstatic.com/**", lambda route: route.abort())
+        self.polices(contexte)
         page = contexte.new_page()
         erreurs = []
         page.on("console", lambda m: erreurs.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: erreurs.append(str(e)))
         page.on("response", lambda r: erreurs.append(f"{r.status} {r.url}") if r.status >= 400 else None)
         page.goto(self.base + chemin, wait_until="networkidle")
-        # Les polices Google sont bloquées exprès par les tests.
-        return [e for e in erreurs if "fonts.g" not in e and "ERR_FAILED" not in e]
+        return erreurs
 
     def test_poids_au_premier_affichage(self):
         for chemin in ["/", "/utopia/", "/raggamuffin/", "/zikzac/", "/astroluna/"]:
@@ -449,7 +526,7 @@ class TestEnsemble(SiteTestCase):
         for largeur, visible in [(390, ".colonnes-2"), (1440, ".colonnes-3")]:
             contexte = self.navigateur.new_context(viewport={"width": largeur, "height": 900})
             self._contextes.append(contexte)
-            contexte.route("**/fonts.g*/**", lambda route: route.abort())
+            self.polices(contexte)
             p = contexte.new_page()
             demandes = []
             p.on("request", lambda r: demandes.append(r.url))

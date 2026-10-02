@@ -6,14 +6,16 @@ dans images/ et les pages HTML à la racine du dépôt.
 Usage : python3 outils/generer.py --source "/chemin/vers/portfolio photo"
 """
 import argparse
+import hashlib
 import html
 import io
 import json
+import re
 import sys
 from pathlib import Path
 from string import Template
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageCms, ImageOps, UnidentifiedImageError
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -38,8 +40,63 @@ class ErreurGeneration(Exception):
 
 def charger_config(chemin: Path) -> dict:
     """Lit le fichier de contenu (festivals, photos, légendes)."""
-    with open(chemin, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(chemin, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise ErreurGeneration(f"Fichier de contenu introuvable : {chemin}") from None
+    except json.JSONDecodeError as erreur:
+        raise ErreurGeneration(
+            f"{Path(chemin).name} est mal formé, ligne {erreur.lineno}, colonne {erreur.colno} "
+            f"(souvent une virgule en trop ou un guillemet manquant) : {erreur.msg}") from None
+
+
+CHAMPS_FESTIVAL = ("slug", "nom", "nom_complet", "lieu", "dates", "annee", "dossier", "couverture", "photos")
+CHAMPS_PHOTO = ("fichier", "legende", "alt")
+SLUG_VALIDE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+
+
+def valider_config(cfg: dict) -> None:
+    """Vérifie le contenu avant tout travail, pour signaler une erreur de saisie en clair."""
+    festivals = cfg.get("festivals") if isinstance(cfg, dict) else None
+    if not isinstance(festivals, list) or not festivals:
+        raise ErreurGeneration("festivals.json doit contenir une liste « festivals » non vide.")
+    slugs = []
+    for position, festival in enumerate(festivals, 1):
+        nom = festival.get("nom") or festival.get("slug") or f"n° {position}"
+        for champ in CHAMPS_FESTIVAL:
+            if champ not in festival:
+                raise ErreurGeneration(f"Festival « {nom} » : il manque le champ « {champ} ».")
+        slug = festival["slug"]
+        if not isinstance(slug, str) or not SLUG_VALIDE.match(slug):
+            raise ErreurGeneration(
+                f"Festival « {nom} » : le slug « {slug} » n'est pas valide. "
+                "Utiliser seulement des minuscules, des chiffres et des tirets (exemple : mon-festival).")
+        if slug in slugs:
+            raise ErreurGeneration(f"Le slug « {slug} » est utilisé par deux festivals.")
+        slugs.append(slug)
+        photos = festival["photos"]
+        if not isinstance(photos, list) or not photos:
+            raise ErreurGeneration(f"Festival « {nom} » : la liste « photos » est vide.")
+        for numero, photo in enumerate(photos, 1):
+            for champ in CHAMPS_PHOTO:
+                if champ not in photo:
+                    repere = photo.get("fichier", f"n° {numero}")
+                    raise ErreurGeneration(f"Festival « {nom} », photo {repere} : il manque le champ « {champ} ».")
+        couverture = festival["couverture"]
+        if not isinstance(couverture, int) or not 1 <= couverture <= len(photos):
+            raise ErreurGeneration(
+                f"Festival « {nom} » : « couverture » vaut {couverture}, "
+                f"il faut un numéro de photo entre 1 et {len(photos)}.")
+    bandeau = cfg.get("accueil", {}).get("bandeau", {})
+    if bandeau.get("festival") not in slugs:
+        raise ErreurGeneration(
+            f"Accueil : le bandeau désigne le festival « {bandeau.get('festival')} », qui n'existe pas "
+            f"(festivals connus : {', '.join(slugs)}).")
+    nombre = len(festivals[slugs.index(bandeau["festival"])]["photos"])
+    if not isinstance(bandeau.get("photo"), int) or not 1 <= bandeau["photo"] <= nombre:
+        raise ErreurGeneration(
+            f"Accueil : le bandeau désigne la photo {bandeau.get('photo')}, il faut un numéro entre 1 et {nombre}.")
 
 
 def nom_image(slug: str, numero: int, largeur: int, ext: str) -> str:
@@ -64,6 +121,55 @@ def _tailles(largeur: int, hauteur: int) -> tuple[list, list]:
     return vignettes, grands
 
 
+# Les images préparées portent le numéro de la photo dans la galerie, pas son nom
+# d'origine. Un registre par festival retient donc de quelle photo vient chaque
+# numéro : si l'ordre change ou si une photo est remplacée, ses images sont refaites.
+REGISTRE = "empreintes.json"
+
+
+def _empreinte(source: Path) -> str:
+    """Identifie le contenu d'une photo d'origine et les réglages utilisés pour la préparer."""
+    reglages = repr((VIGNETTES, GRANDS, QUALITES_WEBP, QUALITES_JPEG, POIDS_MAX_VIGNETTE, POIDS_MAX_GRAND, "sRGB"))
+    condense = hashlib.sha256(reglages.encode())
+    condense.update(source.read_bytes())
+    return condense.hexdigest()
+
+
+def _lire_registre(dossier: Path) -> dict:
+    try:
+        return json.loads((dossier / REGISTRE).read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def _ecrire_registre(dossier: Path, registre: dict) -> None:
+    contenu = json.dumps(registre, indent=1, sort_keys=True, ensure_ascii=False) + "\n"
+    (dossier / REGISTRE).write_text(contenu, encoding="utf-8", newline="\n")
+
+
+def _fichiers(entree: dict) -> list[str]:
+    noms = [nom for _, nom in entree["vignettes"] + entree["grands"]]
+    return noms + [nom.rsplit(".", 1)[0] + ".jpg" for nom in noms]
+
+
+def _ouvrir_en_srgb(source: Path) -> Image.Image:
+    """Charge une photo droite (rotation EXIF appliquée) et dans l'espace de couleur du web."""
+    try:
+        with Image.open(source) as brute:
+            profil = brute.info.get("icc_profile")
+            image = ImageOps.exif_transpose(brute).convert("RGB")
+    except (UnidentifiedImageError, OSError) as erreur:
+        raise ErreurGeneration(f"Photo illisible : {source.name} ({erreur})") from None
+    if profil:
+        try:
+            origine = ImageCms.ImageCmsProfile(io.BytesIO(profil))
+            if "srgb" not in ImageCms.getProfileDescription(origine).lower():
+                image = ImageCms.profileToProfile(image, origine, ImageCms.createProfile("sRGB"), outputMode="RGB")
+        except ImageCms.PyCMSError:
+            pass  # profil inexploitable : on garde les couleurs telles quelles
+    return image
+
+
 def preparer_photo(source: Path, dossier_sortie: Path, slug: str, numero: int) -> dict:
     """Écrit les versions allégées d'une photo (WebP + JPEG) et décrit le résultat."""
     source = Path(source)
@@ -71,38 +177,70 @@ def preparer_photo(source: Path, dossier_sortie: Path, slug: str, numero: int) -
         raise ErreurGeneration(f"Photo introuvable : {source.name} (cherchée dans {source.parent})")
     dossier_sortie = Path(dossier_sortie)
     dossier_sortie.mkdir(parents=True, exist_ok=True)
-    date_source = source.stat().st_mtime
 
-    with Image.open(source) as brute:
-        image = ImageOps.exif_transpose(brute).convert("RGB")
+    cle = f"{numero:02d}"
+    empreinte = _empreinte(source)
+    registre = _lire_registre(dossier_sortie)
+    entree = registre.get(cle)
+    if entree and entree.get("empreinte") == empreinte and all((dossier_sortie / f).is_file() for f in _fichiers(entree)):
+        return _resultat(entree)
+
+    image = _ouvrir_en_srgb(source)
+    for ancien in dossier_sortie.glob(f"{slug}-{cle}-*"):
+        ancien.unlink()
     largeur, hauteur = image.size
     vignettes, grands = _tailles(largeur, hauteur)
 
-    def ecrire(taille: tuple[int, int], poids_max: int) -> tuple[int, str]:
+    def ecrire(taille: tuple[int, int], poids_max: int) -> list:
         nom = nom_image(slug, numero, taille[0], "webp")
         cibles = [
             (dossier_sortie / nom, QUALITES_WEBP, {"format": "WEBP", "method": 6}),
             (dossier_sortie / nom_image(slug, numero, taille[0], "jpg"), QUALITES_JPEG,
              {"format": "JPEG", "optimize": True, "progressive": True}),
         ]
-        a_faire = [c for c in cibles if not c[0].exists() or c[0].stat().st_mtime < date_source]
-        if a_faire:
-            reduite = image if taille == image.size else image.resize(taille, Image.LANCZOS)
-            for chemin, qualites, options in a_faire:
-                for qualite in qualites:
-                    tampon = io.BytesIO()
-                    reduite.save(tampon, quality=qualite, **options)
-                    if tampon.tell() <= poids_max:
-                        break
-                chemin.write_bytes(tampon.getvalue())
-        return taille[0], nom
+        reduite = image if taille == image.size else image.resize(taille, Image.LANCZOS)
+        for chemin, qualites, options in cibles:
+            for qualite in qualites:
+                tampon = io.BytesIO()
+                reduite.save(tampon, quality=qualite, **options)
+                if tampon.tell() <= poids_max:
+                    break
+            chemin.write_bytes(tampon.getvalue())
+        return [taille[0], nom]
 
-    return {
+    entree = {
+        "source": source.name,
+        "empreinte": empreinte,
         "largeur": largeur,
         "hauteur": hauteur,
         "vignettes": [ecrire(t, POIDS_MAX_VIGNETTE) for t in vignettes],
         "grands": [ecrire(t, POIDS_MAX_GRAND) for t in grands],
     }
+    registre = _lire_registre(dossier_sortie)
+    registre[cle] = entree
+    _ecrire_registre(dossier_sortie, registre)
+    return _resultat(entree)
+
+
+def _resultat(entree: dict) -> dict:
+    return {
+        "largeur": entree["largeur"],
+        "hauteur": entree["hauteur"],
+        "vignettes": [(l, nom) for l, nom in entree["vignettes"]],
+        "grands": [(l, nom) for l, nom in entree["grands"]],
+    }
+
+
+def _nettoyer(dossier: Path, nombre_photos: int) -> None:
+    """Supprime les images qui ne correspondent plus à aucune photo du festival."""
+    registre = _lire_registre(dossier)
+    garde = {cle: e for cle, e in registre.items() if int(cle) <= nombre_photos}
+    attendus = {REGISTRE} | {f for e in garde.values() for f in _fichiers(e)}
+    for fichier in dossier.iterdir():
+        if fichier.is_file() and fichier.name not in attendus:
+            fichier.unlink()
+    if garde != registre:
+        _ecrire_registre(dossier, garde)
 
 
 def repartir_colonnes(photos: list[dict], n: int) -> list[list[dict]]:
@@ -268,6 +406,7 @@ def generer_site(source: Path, racine: Path) -> None:
     """Prépare toutes les images puis écrit toutes les pages dans `racine`."""
     source, racine = Path(source), Path(racine)
     cfg = charger_config(CONFIG)
+    valider_config(cfg)
     festivals = cfg["festivals"]
 
     # 1. Images. Une photo manquante arrête tout avant l'écriture de la moindre page.
@@ -277,6 +416,7 @@ def generer_site(source: Path, racine: Path) -> None:
             photo.update(preparer_photo(source / festival["dossier"] / photo["fichier"],
                                         sortie, festival["slug"], index + 1))
             photo["index"] = index
+        _nettoyer(sortie, len(festival["photos"]))
 
     # 2. Pages.
     pages = {"index.html": rendre_accueil(cfg), "404.html": rendre_introuvable(cfg)}
@@ -286,7 +426,7 @@ def generer_site(source: Path, racine: Path) -> None:
     for chemin, contenu in pages.items():
         fichier = racine / chemin
         fichier.parent.mkdir(parents=True, exist_ok=True)
-        fichier.write_text(contenu, encoding="utf-8")
+        fichier.write_text(contenu, encoding="utf-8", newline="\n")
 
 
 def main() -> int:

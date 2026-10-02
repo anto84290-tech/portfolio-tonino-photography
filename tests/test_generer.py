@@ -105,6 +105,145 @@ class TestImages(unittest.TestCase):
                 self.assertLess((serre / fichier).stat().st_size, (normal / fichier).stat().st_size, fichier)
 
 
+class _SiteMiniature(unittest.TestCase):
+    """Base : un festival de test « t » dont on choisit les photos, généré dans un dossier temporaire."""
+
+    COULEURS = {"rouge": (220, 30, 30), "vert": (30, 200, 30), "bleu": (30, 30, 220)}
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        base = Path(self._tmp.name)
+        self.source, self.site, self.config = base / "source", base / "site", base / "festivals.json"
+        (self.source / "d").mkdir(parents=True)
+        self.site.mkdir()
+        for nom, couleur in self.COULEURS.items():
+            Image.new("RGB", (1200, 900), couleur).save(self.source / "d" / f"{nom}.jpg", quality=90)
+        correctif = unittest.mock.patch.object(generer, "CONFIG", self.config)
+        correctif.start()
+        self.addCleanup(correctif.stop)
+
+    def festival(self, noms, **champs):
+        f = {"slug": "t", "nom": "Test", "nom_complet": "Festival de test", "lieu": "Marseille",
+             "dates": "1er janvier 2026", "annee": 2026, "dossier": "d", "couverture": 1,
+             "photos": [{"fichier": f"{n}.jpg", "legende": "", "alt": f"Aplat de couleur {n} pour les tests"}
+                        for n in noms]}
+        f.update(champs)
+        return f
+
+    def ecrire(self, festival, bandeau=None):
+        import json
+        cfg = {"accueil": {"bandeau": bandeau or {"festival": festival["slug"], "photo": 1}}, "festivals": [festival]}
+        self.config.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+
+    def couleur(self, numero):
+        with Image.open(self.site / "images" / "t" / f"t-{numero:02d}-640.webp") as im:
+            r, v, b = im.convert("RGB").getpixel((320, 240))
+        return {max(r, v, b): nom for nom, (r, v, b) in zip(["rouge", "vert", "bleu"], [(r, 0, 0), (0, v, 0), (0, 0, b)])}[max(r, v, b)]
+
+
+class TestRegeneration(_SiteMiniature):
+    def test_changer_l_ordre_des_photos_change_les_images(self):
+        self.ecrire(self.festival(["rouge", "vert"]))
+        generer_site(self.source, self.site)
+        self.assertEqual([self.couleur(1), self.couleur(2)], ["rouge", "vert"])
+        self.ecrire(self.festival(["bleu", "rouge", "vert"]))
+        generer_site(self.source, self.site)
+        self.assertEqual([self.couleur(1), self.couleur(2), self.couleur(3)], ["bleu", "rouge", "vert"])
+
+    def test_remplacer_une_photo_sous_le_meme_nom_regenere_ses_images(self):
+        self.ecrire(self.festival(["rouge"]))
+        generer_site(self.source, self.site)
+        Image.new("RGB", (1200, 900), self.COULEURS["vert"]).save(self.source / "d" / "rouge.jpg", quality=90)
+        generer_site(self.source, self.site)
+        self.assertEqual(self.couleur(1), "vert")
+
+    def test_photo_retiree_supprime_ses_images(self):
+        self.ecrire(self.festival(["rouge", "vert"]))
+        generer_site(self.source, self.site)
+        self.ecrire(self.festival(["rouge"]))
+        generer_site(self.source, self.site)
+        restes = [f.name for f in (self.site / "images" / "t").iterdir() if f.name.startswith("t-02-")]
+        self.assertEqual(restes, [])
+
+    def test_rien_n_est_refait_si_rien_ne_change(self):
+        self.ecrire(self.festival(["rouge", "vert"]))
+        generer_site(self.source, self.site)
+        images = [f for f in (self.site / "images" / "t").iterdir() if f.suffix in (".webp", ".jpg")]
+        dates = {f.name: f.stat().st_mtime_ns for f in images}
+        generer_site(self.source, self.site)
+        self.assertEqual({f.name: f.stat().st_mtime_ns for f in images}, dates)
+
+
+class TestValidation(_SiteMiniature):
+    def echec(self):
+        with self.assertRaises(ErreurGeneration) as ctx:
+            generer_site(self.source, self.site)
+        self.assertFalse((self.site / "index.html").exists())
+        return str(ctx.exception)
+
+    def test_json_mal_forme(self):
+        self.config.write_text('{"festivals": [ {"slug": "t",} ]}', encoding="utf-8")
+        message = self.echec()
+        self.assertIn("festivals.json", message)
+        self.assertIn("ligne", message)
+
+    def test_champ_manquant_dans_une_photo(self):
+        f = self.festival(["rouge"])
+        del f["photos"][0]["alt"]
+        self.ecrire(f)
+        message = self.echec()
+        self.assertIn("alt", message)
+        self.assertIn("rouge.jpg", message)
+
+    def test_champ_manquant_dans_un_festival(self):
+        f = self.festival(["rouge"])
+        del f["annee"]
+        self.ecrire(f)
+        self.assertIn("annee", self.echec())
+
+    def test_slug_invalide(self):
+        self.ecrire(self.festival(["rouge"], slug="Mon Festival"), bandeau={"festival": "Mon Festival", "photo": 1})
+        self.assertIn("slug", self.echec())
+
+    def test_couverture_hors_limites(self):
+        self.ecrire(self.festival(["rouge", "vert"], couverture=5))
+        self.assertIn("couverture", self.echec())
+
+    def test_bandeau_vers_un_festival_inconnu(self):
+        self.ecrire(self.festival(["rouge"]), bandeau={"festival": "inconnu", "photo": 1})
+        self.assertIn("bandeau", self.echec())
+
+    def test_fichier_qui_n_est_pas_une_image(self):
+        (self.source / "d" / "rouge.jpg").write_text("ceci n'est pas une image", encoding="utf-8")
+        self.ecrire(self.festival(["rouge"]))
+        self.assertIn("rouge.jpg", self.echec())
+
+
+PHOTO_P3 = Path("/mnt/user-data/uploads/portfolio photo/Astroluna 2026/Tonino_photography_publique7.jpg.jpg")
+
+
+@unittest.skipUnless(PHOTO_P3.is_file(), "photo d'origine au profil Display P3 indisponible")
+class TestCouleurs(unittest.TestCase):
+    def test_profil_display_p3_converti_en_srgb(self):
+        import io
+        from PIL import ImageCms, ImageStat
+        with tempfile.TemporaryDirectory() as tmp:
+            r = preparer_photo(PHOTO_P3, Path(tmp), "test", 1)
+            with Image.open(Path(tmp) / r["vignettes"][0][1]) as sortie:
+                sortie = sortie.convert("RGB")
+                moyenne = ImageStat.Stat(sortie).mean
+            with Image.open(PHOTO_P3) as brute:
+                profil = ImageCms.ImageCmsProfile(io.BytesIO(brute.info["icc_profile"]))
+                brute = brute.convert("RGB")
+                sans_conversion = ImageStat.Stat(brute.resize(sortie.size)).mean
+                attendu = ImageStat.Stat(ImageCms.profileToProfile(
+                    brute, profil, ImageCms.createProfile("sRGB"), outputMode="RGB").resize(sortie.size)).mean
+        ecart = lambda a, b: max(abs(x - y) for x, y in zip(a, b))
+        self.assertGreater(ecart(attendu, sans_conversion), 2)   # la conversion change réellement les couleurs
+        self.assertLess(ecart(moyenne, attendu), 1.5)            # et le résultat est bien en sRGB
+
+
 # ---------------------------------------------------------------------------
 # Petit lecteur de HTML pour interroger les pages générées
 # ---------------------------------------------------------------------------

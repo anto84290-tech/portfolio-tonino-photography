@@ -10,7 +10,7 @@
        local("Helvetica Neue Bold"), local("HelveticaNeue-Bold"), local("Liberation Sans Bold"),
        local("DejaVu Sans Bold"), local("Arial"), local("Roboto");
   font-weight: 900;
-  size-adjust: 68%;
+  size-adjust: 76%;
 }
 
 :root {
@@ -135,7 +135,8 @@ p { margin: 0; }
 
 /* ------------------------------------------------------------------ Bandeau */
 
-.bandeau { position: relative; height: 860px; overflow: hidden; }
+/* Plein écran, sans dépasser 860 px ni passer sous 560 px (petits écrans, téléphone couché). */
+.bandeau { position: relative; height: 860px; height: min(860px, 100svh); min-height: 560px; overflow: hidden; }
 .bandeau picture, .bande picture { position: absolute; inset: 0; }
 .bandeau-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50% 38%; }
 .bandeau-voile {
@@ -152,7 +153,7 @@ p { margin: 0; }
   flex-direction: column;
   gap: 28px;
 }
-.bandeau-titre { font-size: clamp(56px, 9vw, 132px); line-height: .9; }
+.bandeau-titre { font-size: clamp(56px, 9vw, 132px); line-height: .96; }
 .bandeau-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; flex-wrap: wrap; }
 .bandeau-accroche { max-width: 520px; font-size: 18px; color: var(--texte-doux); }
 .bandeau-info { font-size: 14px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--texte-doux); }
@@ -164,10 +165,11 @@ p { margin: 0; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   padding: 0 var(--marge) 40px;
 }
-.section-tete h2 { font-size: 64px; line-height: 1; }
+.section-tete h2 { flex-shrink: 0; font-size: 64px; line-height: 1; }
 .section-tete p { font-size: 14px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--secondaire); }
 
 .bande {
@@ -256,7 +258,7 @@ p { margin: 0; }
   min-height: 44px;
   font-family: var(--titres);
   font-weight: 900;
-  font-size: clamp(28px, 7.6vw, 110px);
+  font-size: clamp(20px, 6.9vw, 110px);
   line-height: .95;
   overflow-wrap: anywhere;
 }
@@ -301,7 +303,7 @@ p { margin: 0; }
 }
 /* Le nom occupe la largeur disponible : --car est son nombre de lettres. */
 .festival-titre {
-  font-size: clamp(48px, calc((100vw - 2 * var(--marge)) / (var(--car, 11) * .56)), 320px);
+  font-size: clamp(40px, calc((100vw - 2 * var(--marge)) / (var(--car, 11) * .56)), 320px);
   line-height: .82;
 }
 .festival-infos {
@@ -332,7 +334,7 @@ p { margin: 0; }
 /* ------------------------------------------------------- Page introuvable */
 
 .introuvable { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; padding: 140px var(--marge) 160px; }
-.introuvable h1 { font-size: clamp(52px, 10vw, 140px); line-height: .9; }
+.introuvable h1 { font-size: clamp(44px, 10vw, 140px); line-height: .9; }
 .introuvable p:not(.surtitre) { font-size: 20px; color: var(--texte-doux); }
 .bouton {
   display: inline-flex;
@@ -349,7 +351,7 @@ p { margin: 0; }
 
 /* -------------------------------------------------------------- Visionneuse */
 
-html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
+html.visionneuse-ouverte { overflow: hidden; }
 
 .visionneuse {
   position: fixed;
@@ -433,7 +435,8 @@ html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
 
 @media (max-width: 1100px) {
   :root { --marge: 32px; }
-  .bandeau { height: 760px; }
+  .bandeau { height: 760px; height: min(760px, 100svh); }
+  .bande-nom { font-size: clamp(52px, 9.4vw, 104px); }
   .festivals { padding-top: 96px; }
   .bande { height: 240px; }
   .a-propos { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 96px var(--marge); }
@@ -473,7 +476,9 @@ html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
   }
   html.js .menu.ouvert a { min-height: 72px; }
 
-  .bandeau { height: 640px; }
+  html.menu-ouvert { overflow: hidden; }
+
+  .bandeau { height: 640px; height: min(640px, 100svh); min-height: 480px; }
   .bandeau-photo { object-position: 50% 30%; }
   .bandeau-voile { background: linear-gradient(180deg, rgba(10,10,10,.65) 0%, rgba(10,10,10,0) 24%, rgba(10,10,10,.3) 50%, rgba(10,10,10,.96) 100%); }
   .bandeau-texte { bottom: 28px; gap: 16px; }
@@ -487,6 +492,7 @@ html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
   .section-tete p { font-size: 12px; }
 
   .bande { height: 176px; }
+  .bande-nom { font-size: clamp(40px, 14vw, 64px); }
   .bande-voile { background: linear-gradient(180deg, rgba(10,10,10,.15) 0%, rgba(10,10,10,.9) 100%); }
   .bande-texte, .suivant .bande-texte {
     display: flex;

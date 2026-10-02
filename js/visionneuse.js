@@ -17,6 +17,7 @@
   var courant = 0;
   var geste = null;
   var ignorerClic = false;
+  var appuiSurLeFond = false;
 
   // ---------------------------------------------------------------- données
 
@@ -189,12 +190,15 @@
 
   function auClicSurLeFond(evenement) {
     if (ignorerClic) { ignorerClic = false; return; }
-    if (evenement.target === dialogue || evenement.target === scene) dialogue.close();
+    // La scène capture le pointeur : un clic sur la photo arrive ici avec la scène pour cible.
+    // On ne ferme que si l'appui a commencé sur le fond noir, pas sur la photo.
+    if (evenement.target === dialogue || (evenement.target === scene && appuiSurLeFond)) dialogue.close();
   }
 
   function debutGeste(evenement) {
     if (evenement.pointerType === "mouse" && evenement.button !== 0) return;
     ignorerClic = false;
+    appuiSurLeFond = evenement.target === scene;
     geste = { id: evenement.pointerId, x: evenement.clientX, y: evenement.clientY, t: evenement.timeStamp, dx: 0, dy: 0 };
     if (scene.setPointerCapture) {
       try { scene.setPointerCapture(evenement.pointerId); } catch (erreur) { /* pointeur déjà relâché */ }
@@ -221,12 +225,21 @@
     var dy = evenement.clientY - geste.y;
     var duree = Math.max(1, evenement.timeStamp - geste.t);
     geste = null;
-    image.classList.remove("en-glissement");
-    image.style.transform = "";
     var horizontal = Math.abs(dx) > Math.abs(dy);
     var assezLoin = Math.abs(dx) > SEUIL_DISTANCE;
     var assezVite = Math.abs(dx) > SEUIL_MOUVEMENT * 2 && Math.abs(dx) / duree > SEUIL_VITESSE;
-    if (horizontal && (assezLoin || assezVite)) aller(dx < 0 ? 1 : -1);
+    if (photos.length > 1 && horizontal && (assezLoin || assezVite)) {
+      // La nouvelle photo s'affiche directement au centre, sans hériter du décalage du doigt.
+      image.style.transition = "none";
+      image.classList.remove("en-glissement");
+      aller(dx < 0 ? 1 : -1);
+      void image.offsetWidth;
+      image.style.transition = "";
+    } else {
+      // Geste trop court : la photo revient en place en douceur.
+      image.classList.remove("en-glissement");
+      image.style.transform = "";
+    }
   }
 
   function annulerGeste() {

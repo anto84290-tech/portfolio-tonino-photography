@@ -696,7 +696,7 @@ git commit --allow-empty -m "Declenche la previsualisation" && git push
 
 Dans l'onglet Deployments, la publication doit porter l'étiquette « Preview », pas « Production ». Si elle est partie en production par erreur, Anthony rétablit l'ancienne version depuis Deployments › ancienne publication › Promote to Production (ou Instant Rollback).
 
-Ouvrir l'adresse de prévisualisation : les six pages répondent, les polices Google sont chargées (vérifier qu'aucun titre ne déborde avec la vraie police en 390, 820 et 1440 px), la visionneuse fonctionne. Transmettre l'adresse à Anthony pour validation sur son téléphone.
+Ouvrir l'adresse de prévisualisation : les six pages répondent, les polices Google sont chargées (vérifier qu'aucun titre ne déborde ni ne se coupe avec la vraie police en 320, 360, 375, 390, 768, 820 et 1440 px), la visionneuse fonctionne. Transmettre l'adresse à Anthony pour validation sur son téléphone.
 
 - [ ] **Step 6 : Basculer après validation**
 

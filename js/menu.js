@@ -25,6 +25,13 @@
     if (evenement.target.closest("a")) regler(false);
   });
 
+  // Le panneau n'existe que sur téléphone : s'il est ouvert quand l'écran s'élargit
+  // (téléphone tourné), on le referme pour ne pas bloquer la page.
+  var ecranLarge = window.matchMedia("(min-width: 700px)");
+  var auChangement = function (evenement) { if (evenement.matches) regler(false); };
+  if (ecranLarge.addEventListener) ecranLarge.addEventListener("change", auChangement);
+  else if (ecranLarge.addListener) ecranLarge.addListener(auChangement);
+
   document.addEventListener("keydown", function (evenement) {
     if (evenement.key === "Escape" && estOuvert()) {
       regler(false);

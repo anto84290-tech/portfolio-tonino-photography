@@ -1,0 +1,522 @@
+{
+ "01": {
+  "empreinte": "b8ed1f9efc6b20499de7bc6139248af1ea6c1df701bad40fb2295206657ea760",
+  "grands": [
+   [
+    1400,
+    "utopia-01-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-01-2200.webp"
+   ]
+  ],
+  "hauteur": 3381,
+  "largeur": 4508,
+  "source": "Anthony_Valldercabres_40.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-01-640.webp"
+   ],
+   [
+    1000,
+    "utopia-01-1000.webp"
+   ]
+  ]
+ },
+ "02": {
+  "empreinte": "40d019535a615da6c3ce2d7ce669aab8ebe18da3ba97a62a17442109d9618a21",
+  "grands": [
+   [
+    1050,
+    "utopia-02-1050.webp"
+   ],
+   [
+    1650,
+    "utopia-02-1650.webp"
+   ]
+  ],
+  "hauteur": 4290,
+  "largeur": 3218,
+  "source": "Anthony_Valldercabres_10.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-02-640.webp"
+   ],
+   [
+    1000,
+    "utopia-02-1000.webp"
+   ]
+  ]
+ },
+ "03": {
+  "empreinte": "c5e06da7f14906a769fbac9bd32b8b702b8cfeda8472536f6313857acdf37ac6",
+  "grands": [
+   [
+    1400,
+    "utopia-03-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-03-2200.webp"
+   ]
+  ],
+  "hauteur": 3593,
+  "largeur": 4791,
+  "source": "Anthony_Valldercabres_12.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-03-640.webp"
+   ],
+   [
+    1000,
+    "utopia-03-1000.webp"
+   ]
+  ]
+ },
+ "04": {
+  "empreinte": "f19344263b731bdbbb3b4eb03cb027495450fbbfa88e0ca9e88a6e563ef09d7f",
+  "grands": [
+   [
+    1400,
+    "utopia-04-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-04-2200.webp"
+   ]
+  ],
+  "hauteur": 3471,
+  "largeur": 4628,
+  "source": "Anthony_Valldercabres_17.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-04-640.webp"
+   ],
+   [
+    1000,
+    "utopia-04-1000.webp"
+   ]
+  ]
+ },
+ "05": {
+  "empreinte": "639ef50c730cea02e688ac19330acd7e394410547f4f8acff793b3e3b9ab56f1",
+  "grands": [
+   [
+    1400,
+    "utopia-05-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-05-2200.webp"
+   ]
+  ],
+  "hauteur": 2006,
+  "largeur": 2675,
+  "source": "Anthony_Valldercabres_4.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-05-640.webp"
+   ],
+   [
+    1000,
+    "utopia-05-1000.webp"
+   ]
+  ]
+ },
+ "06": {
+  "empreinte": "a96d43e9e78496059813a6d8a330250c3286701bd53fca398dfadca48a008362",
+  "grands": [
+   [
+    1400,
+    "utopia-06-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-06-2200.webp"
+   ]
+  ],
+  "hauteur": 3486,
+  "largeur": 4648,
+  "source": "Anthony_Valldercabres_47.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-06-640.webp"
+   ],
+   [
+    1000,
+    "utopia-06-1000.webp"
+   ]
+  ]
+ },
+ "07": {
+  "empreinte": "30213dba0fc9efb557a9d144044ca8558c77d57c8539deae2ffcc0fae0f81f59",
+  "grands": [
+   [
+    1400,
+    "utopia-07-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-07-2200.webp"
+   ]
+  ],
+  "hauteur": 3341,
+  "largeur": 4454,
+  "source": "Anthony_Valldercabres_14.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-07-640.webp"
+   ],
+   [
+    1000,
+    "utopia-07-1000.webp"
+   ]
+  ]
+ },
+ "08": {
+  "empreinte": "02defefde79c778a726872623d5a5a73175b0dc882f72fbead7a295114e9f777",
+  "grands": [
+   [
+    1400,
+    "utopia-08-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-08-2200.webp"
+   ]
+  ],
+  "hauteur": 3195,
+  "largeur": 4260,
+  "source": "Anthony_Valldercabres_1.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-08-640.webp"
+   ],
+   [
+    1000,
+    "utopia-08-1000.webp"
+   ]
+  ]
+ },
+ "09": {
+  "empreinte": "e404b3ea939628ce8fc83ba565705071fff3adbbbee1c76b80f080bade6a56ee",
+  "grands": [
+   [
+    1400,
+    "utopia-09-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-09-2200.webp"
+   ]
+  ],
+  "hauteur": 2780,
+  "largeur": 4341,
+  "source": "Anthony_Valldercabres_18.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-09-640.webp"
+   ],
+   [
+    1000,
+    "utopia-09-1000.webp"
+   ]
+  ]
+ },
+ "10": {
+  "empreinte": "67505f2f5f35b20d0eea60be905e5def0d1c8523124e7454c8d8bcf861bad72a",
+  "grands": [
+   [
+    1400,
+    "utopia-10-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-10-2200.webp"
+   ]
+  ],
+  "hauteur": 2443,
+  "largeur": 3257,
+  "source": "Anthony_Valldercabres_35.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-10-640.webp"
+   ],
+   [
+    1000,
+    "utopia-10-1000.webp"
+   ]
+  ]
+ },
+ "11": {
+  "empreinte": "d683c421231e53dc3af8dc9b2b4ad771d1828b406f67eae7585d40575bd9823a",
+  "grands": [
+   [
+    1400,
+    "utopia-11-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-11-2200.webp"
+   ]
+  ],
+  "hauteur": 3379,
+  "largeur": 4505,
+  "source": "Anthony_Valldercabres_24.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-11-640.webp"
+   ],
+   [
+    1000,
+    "utopia-11-1000.webp"
+   ]
+  ]
+ },
+ "12": {
+  "empreinte": "df48133cc7e3363d0e4e027f587a04c623b37e60aabe481c2514c0a1859b4c34",
+  "grands": [
+   [
+    1400,
+    "utopia-12-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-12-2200.webp"
+   ]
+  ],
+  "hauteur": 3548,
+  "largeur": 4730,
+  "source": "Anthony_Valldercabres_7.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-12-640.webp"
+   ],
+   [
+    1000,
+    "utopia-12-1000.webp"
+   ]
+  ]
+ },
+ "13": {
+  "empreinte": "86113d97406cee734cf531967f343938a2691c0253a96ee19b6b42d8da289dea",
+  "grands": [
+   [
+    1400,
+    "utopia-13-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-13-2200.webp"
+   ]
+  ],
+  "hauteur": 2541,
+  "largeur": 3388,
+  "source": "Anthony_Valldercabres_29.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-13-640.webp"
+   ],
+   [
+    1000,
+    "utopia-13-1000.webp"
+   ]
+  ]
+ },
+ "14": {
+  "empreinte": "c17871692aef7f25677effbeb3a00fe4e49f8bc90de18709753eca72b05b23af",
+  "grands": [
+   [
+    1400,
+    "utopia-14-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-14-2200.webp"
+   ]
+  ],
+  "hauteur": 4000,
+  "largeur": 5333,
+  "source": "Anthony_Valldercabres_9.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-14-640.webp"
+   ],
+   [
+    1000,
+    "utopia-14-1000.webp"
+   ]
+  ]
+ },
+ "15": {
+  "empreinte": "2b662fd0dd2ac9739bb419a9aa238051c6368b66ccd63f741ecc7af471fe7b5f",
+  "grands": [
+   [
+    1400,
+    "utopia-15-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-15-2200.webp"
+   ]
+  ],
+  "hauteur": 3454,
+  "largeur": 4605,
+  "source": "Anthony_Valldercabres_11.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-15-640.webp"
+   ],
+   [
+    1000,
+    "utopia-15-1000.webp"
+   ]
+  ]
+ },
+ "16": {
+  "empreinte": "f33c91ae2698c6eb5fcc7e78fefe855a917b386601642b4fa9ee2660db3bf781",
+  "grands": [
+   [
+    1400,
+    "utopia-16-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-16-2200.webp"
+   ]
+  ],
+  "hauteur": 3292,
+  "largeur": 4385,
+  "source": "Anthony_Valldercabres_32.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-16-640.webp"
+   ],
+   [
+    1000,
+    "utopia-16-1000.webp"
+   ]
+  ]
+ },
+ "17": {
+  "empreinte": "34d131e6fada1ddc247a65701c7e4e28acbb96ec19d3d5427a453dbf51bbd41d",
+  "grands": [
+   [
+    1400,
+    "utopia-17-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-17-2200.webp"
+   ]
+  ],
+  "hauteur": 3179,
+  "largeur": 4239,
+  "source": "Anthony_Valldercabres_44.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-17-640.webp"
+   ],
+   [
+    1000,
+    "utopia-17-1000.webp"
+   ]
+  ]
+ },
+ "18": {
+  "empreinte": "4c596a29ccc0461eaa4b8b9c4d6c9fe557ace7b4635935d7f750a7c2efb85f70",
+  "grands": [
+   [
+    1400,
+    "utopia-18-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-18-2200.webp"
+   ]
+  ],
+  "hauteur": 2823,
+  "largeur": 3764,
+  "source": "Anthony_Valldercabres_51.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-18-640.webp"
+   ],
+   [
+    1000,
+    "utopia-18-1000.webp"
+   ]
+  ]
+ },
+ "19": {
+  "empreinte": "874b26acb56e63aad84d8d9447550f1260f02bbab60f57dd73f2587404227250",
+  "grands": [
+   [
+    1400,
+    "utopia-19-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-19-2200.webp"
+   ]
+  ],
+  "hauteur": 2943,
+  "largeur": 3924,
+  "source": "Anthony_Valldercabres_31.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-19-640.webp"
+   ],
+   [
+    1000,
+    "utopia-19-1000.webp"
+   ]
+  ]
+ },
+ "20": {
+  "empreinte": "8d1d676a602c3bb864163eba71e657b3c28d6d37a2d5ea2bd81307f2af2f3534",
+  "grands": [
+   [
+    1400,
+    "utopia-20-1400.webp"
+   ],
+   [
+    2200,
+    "utopia-20-2200.webp"
+   ]
+  ],
+  "hauteur": 2711,
+  "largeur": 3615,
+  "source": "Anthony_Valldercabres_ColinBenders.jpg",
+  "vignettes": [
+   [
+    640,
+    "utopia-20-640.webp"
+   ],
+   [
+    1000,
+    "utopia-20-1000.webp"
+   ]
+  ]
+ }
+}

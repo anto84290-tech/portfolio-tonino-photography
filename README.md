@@ -33,8 +33,12 @@ python3 outils/generer.py --source "C:\Users\anto8\Desktop\portfolio photo"
 ```
 
 Le programme allège chaque photo en plusieurs tailles (WebP et JPEG), puis réécrit toutes
-les pages. Une photo déjà préparée n'est pas refaite. S'il manque une photo, il s'arrête
-en donnant le nom du fichier, sans toucher aux pages.
+les pages. Une photo déjà préparée n'est pas refaite : un fichier `empreintes.json`, dans chaque
+dossier d'images, retient de quelle photo vient chaque image. Si l'ordre change ou si une photo
+est remplacée ou retirée, les images concernées sont refaites ou supprimées. S'il manque une photo, il s'arrête
+en donnant le nom du fichier, sans toucher aux pages. Une erreur de saisie dans
+`festivals.json` (virgule en trop, champ oublié, numéro de couverture inexistant) est
+signalée de la même façon, en français.
 
 ## Modifier un texte ou une légende
 
