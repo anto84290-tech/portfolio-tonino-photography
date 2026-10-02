@@ -307,7 +307,7 @@ Chaque version existe en WebP, avec une copie JPEG pour les navigateurs anciens.
 ### 8.5 Hébergement
 
 1. Le code est poussé dans un nouveau dépôt GitHub du compte `anto84290-tech`, nommé `portfolio-tonino-photography`.
-2. Le projet Vercel existant est relié à ce dépôt. Chaque modification poussée met le site à jour automatiquement.
+2. Le projet Vercel existant (`portfolio`, équipe `tonino-photography`) est relié à ce dépôt. Il n'est aujourd'hui relié à aucun dépôt et est réglé pour Next.js : son réglage « Framework Preset » passe à « Other », sans commande de construction, pour servir les fichiers tels quels. Chaque modification poussée met ensuite le site à jour automatiquement.
 3. L'adresse `portfolio-tonino-photography.vercel.app` est conservée.
 
 Le nouveau site est d'abord poussé sur une branche `refonte`, que Vercel publie sur une adresse de prévisualisation. Il ne remplace l'ancien site (branche `main`) qu'après validation par Anthony.
