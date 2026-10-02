@@ -378,5 +378,88 @@ class TestVisionneuse(SiteTestCase):
         self.assertEqual(p.locator(".visionneuse").count(), 1)
 
 
+class TestEnsemble(SiteTestCase):
+    def references(self, page):
+        """Toutes les adresses internes citées par la page (liens, images, styles, scripts)."""
+        return page.evaluate("""() => {
+            const adresses = new Set();
+            const ajouter = (a) => { if (a) adresses.add(new URL(a, location.href).href.split('#')[0]) };
+            document.querySelectorAll('[href]').forEach(e => ajouter(e.getAttribute('href')));
+            document.querySelectorAll('[src]').forEach(e => ajouter(e.getAttribute('src')));
+            document.querySelectorAll('[srcset], [data-grand-srcset]').forEach(e => {
+                for (const attribut of ['srcset', 'data-grand-srcset'])
+                    (e.getAttribute(attribut) || '').split(',').forEach(c => ajouter(c.trim().split(' ')[0]));
+            });
+            return [...adresses].filter(a => a.startsWith(location.origin));
+        }""")
+
+    def liens_casses(self):
+        casses, vus = [], set()
+        for chemin in PAGES:
+            p = self.page(chemin, 1440)
+            for adresse in self.references(p):
+                if adresse in vus:
+                    continue
+                vus.add(adresse)
+                if p.request.get(adresse).status != 200:
+                    casses.append((chemin, adresse))
+        self.assertGreater(len(vus), 400)  # vignettes, grands formats, pages, style et scripts
+        return casses
+
+    def erreurs_console(self, chemin, largeur):
+        contexte = self.navigateur.new_context(viewport={"width": largeur, "height": 900})
+        self._contextes.append(contexte)
+        contexte.route("**/fonts.googleapis.com/**", lambda route: route.abort())
+        contexte.route("**/fonts.gstatic.com/**", lambda route: route.abort())
+        page = contexte.new_page()
+        erreurs = []
+        page.on("console", lambda m: erreurs.append(m.text) if m.type == "error" else None)
+        page.on("pageerror", lambda e: erreurs.append(str(e)))
+        page.on("response", lambda r: erreurs.append(f"{r.status} {r.url}") if r.status >= 400 else None)
+        page.goto(self.base + chemin, wait_until="networkidle")
+        # Les polices Google sont bloquées exprès par les tests.
+        return [e for e in erreurs if "fonts.g" not in e and "ERR_FAILED" not in e]
+
+    def test_poids_au_premier_affichage(self):
+        for chemin in ["/", "/utopia/", "/raggamuffin/", "/zikzac/", "/astroluna/"]:
+            for l in [390, 1440]:
+                p = self.page(chemin, l)
+                p.wait_for_load_state("networkidle")
+                poids = p.evaluate("""performance.getEntriesByType('resource').reduce((s, r) => s + r.transferSize, 0)
+                    + performance.getEntriesByType('navigation')[0].transferSize""")
+                self.assertLess(poids, 1_500_000, (chemin, l))
+
+    def test_tous_les_liens_internes_repondent(self):
+        self.assertEqual(self.liens_casses(), [])
+
+    def test_adresse_inconnue(self):
+        p = self.page("/404.html", 1440)
+        p.locator("a.bouton[href='/']").click()
+        p.wait_for_url(self.base + "/")
+        self.assertEqual(p.locator(".bandeau").count(), 1)
+
+    def test_aucune_erreur_dans_la_console(self):
+        for chemin in ["/", "/utopia/", "/404.html"]:
+            self.assertEqual(self.erreurs_console(chemin, 1440), [], chemin)
+
+    def test_chaque_vignette_telechargee_une_seule_fois(self):
+        # La galerie existe en 2 et en 3 colonnes dans la page : la variante masquée
+        # ne doit pas provoquer un second téléchargement des mêmes photos.
+        import re
+        for largeur, visible in [(390, ".colonnes-2"), (1440, ".colonnes-3")]:
+            contexte = self.navigateur.new_context(viewport={"width": largeur, "height": 900})
+            self._contextes.append(contexte)
+            contexte.route("**/fonts.g*/**", lambda route: route.abort())
+            p = contexte.new_page()
+            demandes = []
+            p.on("request", lambda r: demandes.append(r.url))
+            p.goto(self.base + "/zikzac/", wait_until="load")
+            p.locator(visible + " a.photo img").last.scroll_into_view_if_needed()
+            p.wait_for_load_state("networkidle")
+            vignettes = [d for d in demandes if re.search(r"/zikzac-\d\d-(640|1000)\.", d)]
+            self.assertEqual(len(vignettes), 15, (largeur, len(vignettes)))
+            self.assertEqual(len(set(vignettes)), 15, largeur)
+
+
 if __name__ == "__main__":
     unittest.main()
