@@ -143,5 +143,53 @@ class TestMiseEnPage(SiteTestCase):
         self.assertIn("Big Shoulders Display", p.evaluate("getComputedStyle(document.querySelector('.bande-nom')).fontFamily"))
 
 
+class TestMenu(SiteTestCase):
+    def test_bouton_visible_seulement_sur_telephone(self):
+        self.assertTrue(self.page("/", 390).locator(".menu-bouton").is_visible())
+        self.assertFalse(self.page("/", 1440).locator(".menu-bouton").is_visible())
+        self.assertTrue(self.page("/", 820).locator("#menu a").first.is_visible())
+
+    def test_ouvre_et_ferme(self):
+        p = self.page("/", 390)
+        b = p.locator(".menu-bouton")
+        self.assertFalse(p.locator("#menu a").first.is_visible())
+        b.click()
+        self.assertEqual(b.get_attribute("aria-expanded"), "true")
+        self.assertEqual(p.locator("#menu a:visible").count(), 3)
+        p.keyboard.press("Escape")
+        self.assertEqual(b.get_attribute("aria-expanded"), "false")
+        self.assertFalse(p.locator("#menu a").first.is_visible())
+        self.assertTrue(b.evaluate("e => e === document.activeElement"))
+
+    def test_le_bouton_referme_le_menu(self):
+        p = self.page("/utopia/", 390)
+        b = p.locator(".menu-bouton")
+        b.click()
+        self.assertTrue(p.locator(".menu-bouton .icone-fermer").is_visible())
+        self.assertTrue(p.evaluate("document.documentElement.classList.contains('menu-ouvert')"))
+        b.click()
+        self.assertFalse(p.locator("#menu a").first.is_visible())
+        self.assertTrue(p.locator(".menu-bouton .icone-ouvrir").is_visible())
+        self.assertFalse(p.evaluate("document.documentElement.classList.contains('menu-ouvert')"))
+
+    def test_se_ferme_au_choix_d_un_lien(self):
+        p = self.page("/", 390)
+        p.locator(".menu-bouton").click()
+        p.locator("#menu a", has_text="Contact").click()
+        self.assertFalse(p.locator("#menu a").first.is_visible())
+        self.assertIn("#contact", p.url)
+
+    def test_liens_depuis_une_page_festival(self):
+        p = self.page("/zikzac/", 1440)
+        p.locator("#menu a", has_text="À propos").click()
+        p.wait_for_url("**/#a-propos")
+        self.assertTrue(p.url.endswith("/#a-propos"))
+
+    def test_menu_utilisable_sans_javascript(self):
+        p = self.page("/", 390, javascript=False)
+        self.assertEqual(p.locator("#menu a:visible").count(), 3)
+        self.assertFalse(p.locator(".menu-bouton").is_visible())
+
+
 if __name__ == "__main__":
     unittest.main()
