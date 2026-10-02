@@ -274,6 +274,12 @@ class TestPages(unittest.TestCase):
         for t in ["Raggamuffin Festival", "Nice", "4 août 2026", "11 photos", "Tous les festivals"]:
             self.assertIn(t, html)
 
+    def test_titre_du_festival_indique_son_nombre_de_lettres(self):
+        # Le style s'en sert pour que le nom occupe la largeur sans jamais déborder.
+        for slug, n in [("utopia", 6), ("raggamuffin", 11), ("zikzac", 6), ("astroluna", 9)]:
+            styles = self.attributs(f"{slug}/index.html", "h1.festival-titre", "style")
+            self.assertEqual(styles, [f"--car: {n}"])
+
     def test_legende_et_alt(self):
         legendes = self.attributs("utopia/index.html", ".colonnes-3 a.photo", "data-legende")
         self.assertEqual(legendes.count("Colin Benders"), 1)

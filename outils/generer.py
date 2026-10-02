@@ -230,6 +230,7 @@ def rendre_festival(festival: dict, suivant: dict) -> str:
     nombre = len(festival["photos"])
     corps = _gabarit("festival.html").substitute(
         nom=_e(festival["nom"]),
+        lettres=len(festival["nom"]),
         nom_complet=_e(festival["nom_complet"]),
         lieu=_e(festival["lieu"]),
         dates=_e(festival["dates"]),

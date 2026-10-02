@@ -1,0 +1,527 @@
+/* Tonino Photography — direction « Fosse »
+   Affiche de concert : fond noir, titres énormes en capitales, un seul accent.
+   Seuils : téléphone < 700px · tablette 700–1100px · ordinateur > 1100px. */
+
+/* Police de secours des titres, réglée à la largeur de Big Shoulders Display
+   pour que la mise en page ne bouge pas pendant le chargement de la vraie police. */
+@font-face {
+  font-family: "Titre secours";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Roboto Bold"), local("Roboto-Bold"),
+       local("Helvetica Neue Bold"), local("HelveticaNeue-Bold"), local("Liberation Sans Bold"),
+       local("DejaVu Sans Bold"), local("Arial"), local("Roboto");
+  font-weight: 900;
+  size-adjust: 68%;
+}
+
+:root {
+  --fond: #0A0A0A;
+  --texte: #F4F1EA;
+  --texte-doux: #D9D5CC;
+  --secondaire: #A8A49B;
+  --filet: #2B2B2B;
+  --accent: #FF4B1F;
+  --marge: 48px;
+  --titres: "Big Shoulders Display", "Titre secours", "Arial Narrow", Impact, sans-serif;
+  --courant: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--courant);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, picture { display: block; }
+img { max-width: 100%; height: auto; }
+
+a { color: inherit; text-decoration: none; transition: color .2s; }
+a:hover { color: var(--accent); }
+
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+h1, h2 {
+  margin: 0;
+  font-family: var(--titres);
+  font-weight: 900;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+p { margin: 0; }
+
+/* Lien d'évitement : invisible jusqu'à ce qu'il reçoive le focus au clavier. */
+.sr {
+  position: absolute;
+  left: 12px;
+  top: -80px;
+  z-index: 100;
+  padding: 12px 16px;
+  background: var(--accent);
+  color: var(--fond);
+  font-weight: 600;
+}
+.sr:focus { top: 12px; color: var(--fond); }
+
+.surtitre {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.accent { color: var(--accent); }
+
+/* ------------------------------------------------------------------ En-tête */
+
+.entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 20px var(--marge);
+}
+.page-accueil .entete { position: absolute; top: 0; left: 0; right: 0; z-index: 5; }
+.page-festival .entete, .page-introuvable .entete { border-bottom: 1px solid var(--filet); }
+
+.marque {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--titres);
+  font-weight: 900;
+  font-size: 26px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.menu {
+  display: flex;
+  gap: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.menu a { display: inline-flex; align-items: center; min-height: 44px; }
+.menu a[aria-current] { color: var(--accent); }
+
+.menu-bouton {
+  display: none;
+  position: relative;
+  z-index: 30;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--texte);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.menu-bouton .icone-fermer { display: none; }
+.menu-bouton[aria-expanded="true"] .icone-ouvrir { display: none; }
+.menu-bouton[aria-expanded="true"] .icone-fermer { display: block; }
+
+/* ------------------------------------------------------------------ Bandeau */
+
+.bandeau { position: relative; height: 860px; overflow: hidden; }
+.bandeau picture, .bande picture { position: absolute; inset: 0; }
+.bandeau-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50% 38%; }
+.bandeau-voile {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,10,.62) 0%, rgba(10,10,10,0) 26%, rgba(10,10,10,.25) 55%, rgba(10,10,10,.95) 100%);
+}
+.bandeau-texte {
+  position: absolute;
+  left: var(--marge);
+  right: var(--marge);
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.bandeau-titre { font-size: clamp(56px, 9vw, 132px); line-height: .9; }
+.bandeau-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; flex-wrap: wrap; }
+.bandeau-accroche { max-width: 520px; font-size: 18px; color: var(--texte-doux); }
+.bandeau-info { font-size: 14px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--texte-doux); }
+
+/* ---------------------------------------------------------------- Festivals */
+
+.festivals { padding-top: 120px; scroll-margin-top: 0; }
+.section-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 0 var(--marge) 40px;
+}
+.section-tete h2 { font-size: 64px; line-height: 1; }
+.section-tete p { font-size: 14px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--secondaire); }
+
+.bande {
+  position: relative;
+  display: block;
+  height: 300px;
+  overflow: hidden;
+  border-top: 1px solid var(--filet);
+}
+.bande:last-child { border-bottom: 1px solid var(--filet); }
+.bande-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; transition: filter .3s, transform .6s; }
+.bande:hover .bande-photo, .bande:focus-visible .bande-photo { filter: brightness(1.2); transform: scale(1.02); }
+.bande:focus-visible { outline-offset: -3px; }
+.bande-voile {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10,10,10,.95) 0%, rgba(10,10,10,.7) 42%, rgba(10,10,10,.1) 100%);
+}
+.bande-texte {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-content: end;
+  align-items: baseline;
+  column-gap: 28px;
+  padding: 0 var(--marge) 28px;
+}
+.bande-etiquette { font-size: 15px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.bande-nom {
+  font-family: var(--titres);
+  font-weight: 900;
+  font-size: clamp(52px, 11vw, 160px);
+  line-height: .86;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.bande-compte {
+  align-self: end;
+  padding: 8px 12px;
+  background: rgba(10,10,10,.72);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* « Festival suivant » : l'étiquette passe au-dessus du nom. */
+.suivant .bande-texte { grid-template-columns: minmax(0, 1fr) auto; row-gap: 14px; }
+.suivant .bande-etiquette { grid-column: 1 / -1; }
+
+/* ----------------------------------------------------------------- À propos */
+
+.a-propos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 80px;
+  padding: 140px var(--marge);
+}
+.a-propos-titre { display: flex; flex-direction: column; gap: 24px; }
+.a-propos-titre h2 { font-size: clamp(44px, 5vw, 72px); line-height: .92; }
+.a-propos-texte { display: flex; flex-direction: column; gap: 40px; }
+.bio { font-size: 20px; line-height: 1.6; color: var(--texte-doux); }
+.fiche { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; margin: 0; border-top: 1px solid var(--filet); }
+.fiche div { padding: 18px 0; border-bottom: 1px solid var(--filet); }
+.fiche dt { margin-bottom: 6px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--secondaire); }
+.fiche dd { margin: 0; }
+.note { font-size: 16px; line-height: 1.6; color: var(--secondaire); }
+
+/* ------------------------------------------------------------------ Contact */
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 96px var(--marge) 64px;
+  background: var(--accent);
+  color: var(--fond);
+}
+.contact .surtitre { color: var(--fond); }
+.contact a:hover { color: var(--fond); text-decoration: underline; text-decoration-thickness: .08em; text-underline-offset: .12em; }
+.contact :focus-visible { outline-color: var(--fond); }
+.contact-mail {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--titres);
+  font-weight: 900;
+  font-size: clamp(28px, 7.6vw, 110px);
+  line-height: .95;
+  overflow-wrap: anywhere;
+}
+.contact-liens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 64px;
+  padding-top: 12px;
+  border-top: 2px solid var(--fond);
+  font-weight: 500;
+}
+.contact-liens a, .contact-liens span { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* --------------------------------------------------------------------- Pied */
+
+.pied {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  padding: 16px var(--marge);
+  font-size: 13px;
+  color: var(--secondaire);
+}
+.pied a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* ------------------------------------------------------------ Page festival */
+
+.festival-tete { display: flex; flex-direction: column; gap: 12px; padding: 40px var(--marge) 48px; }
+.retour {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--secondaire);
+}
+/* Le nom occupe la largeur disponible : --car est son nombre de lettres. */
+.festival-titre {
+  font-size: clamp(48px, calc((100vw - 2 * var(--marge)) / (var(--car, 11) * .56)), 320px);
+  line-height: .82;
+}
+.festival-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 56px;
+  margin: 12px 0 0;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--filet);
+  list-style: none;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--secondaire);
+}
+
+.colonnes { display: flex; align-items: flex-start; gap: 6px; padding: 0 6px; }
+.colonnes-2 { display: none; }
+.colonne { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.photo { display: block; background: #161616; cursor: zoom-in; }
+.photo img { width: 100%; height: auto; transition: filter .25s; }
+.photo:hover img { filter: brightness(1.12); }
+.photo:focus-visible { outline-offset: -3px; }
+
+.suivant { margin-top: 120px; }
+
+/* ------------------------------------------------------- Page introuvable */
+
+.introuvable { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; padding: 140px var(--marge) 160px; }
+.introuvable h1 { font-size: clamp(52px, 10vw, 140px); line-height: .9; }
+.introuvable p:not(.surtitre) { font-size: 20px; color: var(--texte-doux); }
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 22px;
+  background: var(--accent);
+  color: var(--fond);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.bouton:hover { color: var(--fond); filter: brightness(1.1); }
+
+/* -------------------------------------------------------------- Visionneuse */
+
+html.visionneuse-ouverte, html.menu-ouvert { overflow: hidden; }
+
+.visionneuse {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(5,5,5,.97);
+  color: var(--texte);
+  overflow: hidden;
+}
+.visionneuse::backdrop { background: #050505; }
+.visionneuse-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 88px 72px;
+}
+.visionneuse-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform .25s ease, opacity .2s ease;
+}
+.visionneuse-image.en-glissement { cursor: grabbing; transition: none; }
+.visionneuse button {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(244,241,234,.1);
+  color: var(--texte);
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.visionneuse button:hover { background: var(--accent); color: var(--fond); }
+.visionneuse-fermer { top: 12px; right: 16px; }
+.visionneuse-precedent { left: 16px; top: 50%; margin-top: -28px; }
+.visionneuse-suivant { right: 16px; top: 50%; margin-top: -28px; }
+.visionneuse-bas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 64px;
+  padding: 0 var(--marge);
+  pointer-events: none;
+}
+.visionneuse-compteur { font-size: 14px; font-weight: 500; letter-spacing: .14em; color: var(--secondaire); font-variant-numeric: tabular-nums; }
+.visionneuse-legende { font-size: 16px; font-weight: 600; }
+.visionneuse-legende[hidden] { display: none; }
+
+/* ------------------------------------------------- Tablette et téléphone */
+
+@media (max-width: 1100px) {
+  :root { --marge: 32px; }
+  .bandeau { height: 760px; }
+  .festivals { padding-top: 96px; }
+  .bande { height: 240px; }
+  .a-propos { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 96px var(--marge); }
+  .colonnes-3 { display: none; }
+  .colonnes-2 { display: flex; }
+  .suivant { margin-top: 96px; }
+}
+
+@media (max-width: 699px) {
+  :root { --marge: 20px; }
+  body { font-size: 16px; }
+
+  .entete { flex-wrap: wrap; gap: 0 16px; padding: 8px 8px 8px var(--marge); }
+  .marque { font-size: 21px; }
+  .menu { gap: 0 20px; flex-wrap: wrap; font-size: 13px; padding-right: 12px; }
+
+  /* Avec JavaScript : le menu se replie derrière le bouton. */
+  html.js .menu-bouton { display: flex; }
+  html.js .menu { display: none; }
+  html.js .menu.ouvert {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 72px var(--marge) 40px;
+    background: var(--fond);
+    font-family: var(--titres);
+    font-weight: 900;
+    font-size: 56px;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  html.js .menu.ouvert a { min-height: 72px; }
+
+  .bandeau { height: 640px; }
+  .bandeau-photo { object-position: 50% 30%; }
+  .bandeau-voile { background: linear-gradient(180deg, rgba(10,10,10,.65) 0%, rgba(10,10,10,0) 24%, rgba(10,10,10,.3) 50%, rgba(10,10,10,.96) 100%); }
+  .bandeau-texte { bottom: 28px; gap: 16px; }
+  .bandeau-titre br { display: none; }
+  .bandeau-accroche { font-size: 16px; }
+  .bandeau-info { font-size: 12px; }
+
+  .festivals { padding-top: 56px; }
+  .section-tete { padding-bottom: 20px; }
+  .section-tete h2 { font-size: 40px; }
+  .section-tete p { font-size: 12px; }
+
+  .bande { height: 176px; }
+  .bande-voile { background: linear-gradient(180deg, rgba(10,10,10,.15) 0%, rgba(10,10,10,.9) 100%); }
+  .bande-texte, .suivant .bande-texte {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 0 var(--marge) 16px;
+  }
+  .festivals .bande-etiquette { display: none; }
+  .bande-etiquette { font-size: 12px; }
+  .bande-compte { order: -1; align-self: flex-start; padding: 6px 10px; font-size: 12px; }
+  .suivant .bande-etiquette { order: -2; }
+
+  .a-propos { gap: 20px; padding: 64px var(--marge); }
+  .a-propos-titre { gap: 16px; }
+  .a-propos-texte { gap: 28px; }
+  .bio { font-size: 16px; }
+  .note { font-size: 14px; }
+
+  .contact { gap: 16px; padding: 48px var(--marge) 32px; }
+  .contact-liens { gap: 0 24px; }
+
+  .pied { font-size: 12px; }
+
+  .festival-tete { padding: 16px var(--marge) 32px; }
+  .festival-infos { gap: 6px 20px; padding-top: 16px; font-size: 12px; }
+  .suivant { margin-top: 64px; }
+
+  .introuvable { padding: 72px var(--marge) 96px; }
+
+  .visionneuse-scene { padding: 64px 0 72px; }
+  .visionneuse-precedent, .visionneuse-suivant { display: none; }
+  .visionneuse button { width: 48px; height: 48px; }
+  .visionneuse-fermer { top: 8px; right: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
