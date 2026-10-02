@@ -472,7 +472,10 @@ class TestPages(unittest.TestCase):
         legendes = self.attributs("utopia/index.html", ".colonnes-3 a.photo", "data-legende")
         self.assertEqual(legendes.count("Colin Benders"), 1)
         self.assertEqual(legendes.count("Kloud"), 1)
-        self.assertEqual(legendes.count(""), 18)
+        for artiste, nombre in {"Koboyo": 1, "2bonmat": 1, "Evänder": 1, "Justine Perry": 2, "Roüge": 2,
+                                "KX CHR": 2, "EXC": 1, "Nona": 1}.items():
+            self.assertEqual(legendes.count(artiste), nombre, artiste)
+        self.assertEqual(legendes.count(""), 7)  # public et ambiances
         for alt in self.attributs("utopia/index.html", "a.photo img", "alt"):
             self.assertGreaterEqual(len(alt), 20)
 
