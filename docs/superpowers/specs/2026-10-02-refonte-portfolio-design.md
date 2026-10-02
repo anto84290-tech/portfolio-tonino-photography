@@ -73,7 +73,7 @@ De haut en bas :
 
 | Ordre | Nom affiché | Nom complet | Lieu | Dates | Photos |
 |---|---|---|---|---|---|
-| 01 | Utopia | Utopia Festival | Marseille | 26 et 27 septembre 2026 | 20 |
+| 01 | Utopia | Utopia Festival | Marseille | 25 et 26 septembre 2026 | 20 |
 | 02 | Raggamuffin | Raggamuffin Festival | Nice | 4 août 2026 | 11 |
 | 03 | ZikZac | ZikZac | Aix-en-Provence | 9 au 11 juillet 2026 | 15 |
 | 04 | Astroluna | Astroluna | Marignane | 4 juillet 2026 | 14 |

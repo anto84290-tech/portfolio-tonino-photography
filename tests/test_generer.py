@@ -43,7 +43,7 @@ class TestConfig(unittest.TestCase):
 
     def test_lieux_et_dates(self):
         f = {x["slug"]: x for x in charger_config(RACINE / "outils/festivals.json")["festivals"]}
-        self.assertEqual((f["utopia"]["lieu"], f["utopia"]["dates"]), ("Marseille", "26 et 27 septembre 2026"))
+        self.assertEqual((f["utopia"]["lieu"], f["utopia"]["dates"]), ("Marseille", "25 et 26 septembre 2026"))
         self.assertEqual((f["raggamuffin"]["lieu"], f["raggamuffin"]["dates"]), ("Nice", "4 août 2026"))
         self.assertEqual((f["zikzac"]["lieu"], f["zikzac"]["dates"]), ("Aix-en-Provence", "9 au 11 juillet 2026"))
         self.assertEqual((f["astroluna"]["lieu"], f["astroluna"]["dates"]), ("Marignane", "4 juillet 2026"))
@@ -472,7 +472,7 @@ class TestPages(unittest.TestCase):
         legendes = self.attributs("utopia/index.html", ".colonnes-3 a.photo", "data-legende")
         self.assertEqual(legendes.count("Colin Benders"), 1)
         self.assertEqual(legendes.count("Kloud"), 1)
-        for artiste, nombre in {"Koboyo": 1, "2bonmat": 1, "Evänder": 1, "Justine Perry": 2, "Roüge": 2,
+        for artiste, nombre in {"Koboyo": 1, "2bonmat1": 1, "Evänder": 1, "Justine Perry": 2, "Roüge": 2,
                                 "KX CHR": 2, "EXC": 1, "Nona": 1}.items():
             self.assertEqual(legendes.count(artiste), nombre, artiste)
         self.assertEqual(legendes.count(""), 7)  # public et ambiances
