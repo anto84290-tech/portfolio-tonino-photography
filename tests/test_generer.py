@@ -391,8 +391,8 @@ class TestPages(unittest.TestCase):
 
     def test_textes_de_l_accueil(self):
         html = self.lire("index.html")
-        for t in ["Capturer l'instant", "prend feu.", "De la fosse", "Canon EOS R50",
-                  "Tamron 17-70mm f/2.8", "photobytonino@gmail.com", "@tonino_photography",
+        for t in ["Capturer l'instant", "prend feu.", "De la fosse", "Canon EOS R50", "Sony A7 II",
+                  "Tamron 17-70mm f/2.8", "50mm f/1.9", "Boîtiers", "Objectifs", "photobytonino@gmail.com", "@tonino_photography",
                   "20 photos", "11 photos", "15 photos", "14 photos"]:
             self.assertIn(t, html)
 

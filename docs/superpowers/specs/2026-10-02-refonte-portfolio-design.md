@@ -85,7 +85,7 @@ Repris du site actuel, sans modification :
 - **Titre :** Capturer l'instant où la scène prend feu.
 - **Accroche :** Photographe de concerts et de festivals, tous styles de musique confondus — de la fosse aux backstages.
 - **Bio :** Je m'appelle Anthony, et je documente les concerts et festivals depuis la fosse — au plus près du son, de la sueur et de la lumière de scène. Pas de style unique : le reggae d'un dimanche après-midi, le rap d'une salle bondée, l'électro d'une nuit de festival. Ce qui m'intéresse, c'est l'instant qui ne se reproduira pas deux fois. Basé à Marseille, disponible pour couvrir vos concerts, festivals et événements — en France comme ailleurs.
-- **Matériel :** Canon EOS R50 · Tamron 17-70mm f/2.8 · Marseille · Disponible pour dates 2026
+- **Matériel :** boîtiers Canon EOS R50 et Sony A7 II · objectifs Tamron 17-70mm f/2.8 et 50mm f/1.9 · Marseille · Disponible pour dates 2026 (mis à jour le 2 octobre 2026 à la demande d'Anthony)
 - **Sites internet :** En dehors de la photo, je conçois aussi des sites internet sur mesure — celui-ci en est un exemple.
 - **Contact :** photobytonino@gmail.com · Instagram @tonino_photography · Marseille, France
 
