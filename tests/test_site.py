@@ -398,6 +398,8 @@ class TestVisionneuse(SiteTestCase):
         p = self.ouvrir(index=19)
         self.assertEqual(p.locator(".visionneuse-legende").inner_text(), "Colin Benders")
         p = self.ouvrir(index=0)
+        self.assertEqual(p.locator(".visionneuse-legende").inner_text(), "Kloud")
+        p = self.ouvrir(index=1)
         self.assertFalse(p.locator(".visionneuse-legende").is_visible())
 
     def test_texte_alternatif_repris_de_la_vignette(self):

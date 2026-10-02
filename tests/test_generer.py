@@ -37,6 +37,10 @@ class TestConfig(unittest.TestCase):
                 self.assertTrue(20 <= len(p["alt"]) <= 120, p["fichier"])
                 self.assertFalse(p["alt"].lower().startswith("photo"), p["fichier"])
 
+    def test_photo_du_bandeau_retouchee(self):
+        utopia = charger_config(RACINE / "outils/festivals.json")["festivals"][0]
+        self.assertEqual(utopia["photos"][0]["fichier"], "Anthony_Valldercabres_kloud.jpg")
+
     def test_lieux_et_dates(self):
         f = {x["slug"]: x for x in charger_config(RACINE / "outils/festivals.json")["festivals"]}
         self.assertEqual((f["utopia"]["lieu"], f["utopia"]["dates"]), ("Marseille", "26 et 27 septembre 2026"))
@@ -392,7 +396,7 @@ class TestPages(unittest.TestCase):
     def test_textes_de_l_accueil(self):
         html = self.lire("index.html")
         for t in ["Capturer l'instant", "prend feu.", "De la fosse", "Canon EOS R50", "Sony A7 II",
-                  "Tamron 17-70mm f/2.8", "50mm f/1.9", "Boîtiers", "Objectifs", "photobytonino@gmail.com", "@tonino_photography",
+                  "Tamron 17-70mm f/2.8", "Sony 50mm f/1.9", "Boîtiers", "Objectifs", "photobytonino@gmail.com", "@tonino_photography",
                   "20 photos", "11 photos", "15 photos", "14 photos"]:
             self.assertIn(t, html)
 
@@ -422,7 +426,8 @@ class TestPages(unittest.TestCase):
     def test_legende_et_alt(self):
         legendes = self.attributs("utopia/index.html", ".colonnes-3 a.photo", "data-legende")
         self.assertEqual(legendes.count("Colin Benders"), 1)
-        self.assertEqual(legendes.count(""), 19)
+        self.assertEqual(legendes.count("Kloud"), 1)
+        self.assertEqual(legendes.count(""), 18)
         for alt in self.attributs("utopia/index.html", "a.photo img", "alt"):
             self.assertGreaterEqual(len(alt), 20)
 
